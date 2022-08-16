@@ -78,11 +78,12 @@ You can find the further information about the following steps in the [docs](./d
 
 ## Application Example
 
-An example on how to extract data from Data Service application using the available API calls is provided in the [examples](./examples):
+Some examples on how to extract data from Data Service application using the available API calls is provided in the [examples](./examples):
 
-- [Production data extraction and visualization in NodeRED](./examples/Production_data_example.md#description) 
+- [Production data extraction and visualization in NodeRED](./examples/Production_data_example.md#description)
+- [Read Write Subflows Example](./examples/Read_Write_Subflows_Example.md)
 
-The guide above explains how to extract data from a PLC data source, save data into the Data Service database and retrieve them using NodeRED, with the aim of saving the values of the collected data points into a CSV file or exploiting them in other applications for specific purposes. 
+The guide above explains how to extract data from a PLC data source, save data into the Data Service database and retrieve them using NodeRED, with the aim of saving the values of the collected data points into a CSV file or exploiting them in other applications for specific purposes.
 
 ## Contribution
 
