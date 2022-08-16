@@ -1,1 +1,1174 @@
-[{"id":"2eac9894.31344","type":"subflow","name":"DataService Read Variables","info":"","category":"","in":[{"x":80,"y":300,"wires":[{"id":"aa91af03.561b5"}]}],"out":[{"x":760,"y":380,"wires":[{"id":"e7622a48.5c5c","port":1}]}],"env":[{"name":"variablesNames","type":"str","value":"","ui":{"label":{"en-US":"Variables Names"},"type":"input","opts":{"types":["str"]}}}],"color":"#0080FF","inputLabels":["Input dates"],"outputLabels":["Data"],"icon":"node-red/leveldb.png","status":{"x":840,"y":394,"wires":[{"id":"679b4ec7.dad508","port":0},{"id":"e7622a48.5c5c","port":2}]}},{"id":"26febc0a.143604","type":"function","z":"2eac9894.31344","name":"Create Token Request","func":"// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"POST\";\n\n//set url\nmsg.url = flow.get(\"dataserviceUrl\") + \"/TokenManagerService/oauth/token\";\n\n//set body\nmsg.payload = {\n    \"appName\": \"edgeappdataservice\",\n    \"appVersion\": \"1.1\",\n    \"hostTenant\": \"edge\",\n    \"userTenant\": \"edge\"\n    };\n        \n// set headers\nconst strJson = JSON.stringify(msg.payload);\nconst lenJson = Buffer.byteLength(strJson);\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['Content-Length'] = lenJson;\n\n// set auth header\nlet authStr = flow.get(\"dataserviceUser\") + \":\" + flow.get(\"dataservicePass\");\nlet basicOut = Buffer.from(authStr).toString('base64');\nmsg.headers['X-SPACE-AUTH-KEY'] = 'Basic ' + basicOut;\n\nreturn msg;\n\n","outputs":1,"noerr":0,"initialize":"","finalize":"","x":180,"y":120,"wires":[["66bddb0b.b2f8bc","9861416a.5c336"]]},{"id":"66bddb0b.b2f8bc","type":"http request","z":"2eac9894.31344","name":"","method":"use","ret":"obj","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","authType":"","x":390,"y":120,"wires":[["e1065197.273a88"]]},{"id":"e1390ea7.653a8","type":"inject","z":"2eac9894.31344","name":"At Start","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"","crontab":"","once":true,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":120,"y":60,"wires":[["65fdfc19.192044"]]},{"id":"e1065197.273a88","type":"change","z":"2eac9894.31344","name":"","rules":[{"t":"set","p":"accessToken","pt":"flow","to":"payload.access_token","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":600,"y":120,"wires":[["a23a4676.76781"]]},{"id":"4cf996b6.8788e","type":"function","z":"2eac9894.31344","name":"Create Data Request","func":"// init msg\nlet outMsg = {\"headers\": {}};\n\n// set method\noutMsg.method = \"GET\";\n\n// get parameters for data query\nconst from = new Date(msg.from);\nconst to = new Date(msg.to);\n//const from = new Date('2021-10-10T10:00:00.000Z');\n//const to = new Date('2021-10-10T11:00:00.000Z');\nconst vars = flow.get(\"variablesIds\");\nconst variablesIds = Object.values(vars);\n\nlet route = \"/DataService/Data?variableIds=[\\\"\" + variablesIds.join(\"\\\",\\\"\") + \"\\\"]\";\nroute += \"&from=\" + from.toISOString();\nroute += \"&to=\"   + to.toISOString();\nroute += \"&order=Ascending\";\n//set url\noutMsg.url = flow.get(\"dataserviceUrl\") + route;\n\n// set token header\noutMsg.headers[\"authorization\"] = flow.get(\"accessToken\");\n\nreturn outMsg;\n    \n","outputs":1,"noerr":0,"initialize":"","finalize":"","x":520,"y":260,"wires":[["fd7954a9.9ae5d"]]},{"id":"fd7954a9.9ae5d","type":"http request","z":"2eac9894.31344","name":"","method":"use","ret":"obj","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","authType":"","x":710,"y":260,"wires":[["e7622a48.5c5c"]]},{"id":"a9fe8f1f.85ec6","type":"function","z":"2eac9894.31344","name":"Create Var Request","func":"// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"GET\";\n\n//set url\nmsg.url = flow.get(\"dataserviceUrl\") + \"/DataService/Variables\";\n\n// set token header\nmsg.headers[\"authorization\"] = flow.get(\"accessToken\");\n\nreturn msg;\n\n","outputs":1,"noerr":0,"initialize":"","finalize":"","x":370,"y":180,"wires":[["eed3d8c1.b29598"]]},{"id":"eed3d8c1.b29598","type":"http request","z":"2eac9894.31344","name":"","method":"use","ret":"obj","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","authType":"","x":570,"y":180,"wires":[["679b4ec7.dad508"]]},{"id":"679b4ec7.dad508","type":"function","z":"2eac9894.31344","name":"Get Variables Ids","func":"// create out message\nlet outMsg    = {\"payload\": null};\n\n// get names of variables to be extracted from Data Service app\nlet varName = env.get(\"variablesNames\");\nlet varNameArray = varName.split(\",\");\n\n// create object with {key:value} as {name:id} of variables\nlet vars = {};\nfor(i=0; i<varNameArray.length; i++){\n    vars[varNameArray[i]]  = []; \n}\n\n// iterate through readed tags\nfor (let i=0; i < varNameArray.length; i++){\n    \n    // iterate through selected ids\n    for(let j=0; j < msg.payload.variables.length; j++){\n    \n        // search for tagselectedTags[j]\n        if(varNameArray[i] == msg.payload.variables[j].variableName)\n        {\n            vars[varNameArray[i]] = msg.payload.variables[j].variableId;\n            // stop on first match, ids are uniques\n            break;\n        }\n    }\n}\n//node.send(vars);\nif (Object.keys(vars).length > 0) {\n    flow.set(\"variablesIds\", vars);\n    // set status\n    outMsg.payload = {\n      \"fill\": \"green\",\n      \"shape\": \"dot\",\n      \"text\": \"Connected and Configured for reading \" + Object.keys(vars).length + \" variables.\"\n    };\n} \nelse {\n    flow.set(\"variablesIds\", null);\n}\n\nreturn outMsg;","outputs":1,"noerr":0,"initialize":"","finalize":"","x":770,"y":180,"wires":[[]]},{"id":"a23a4676.76781","type":"switch","z":"2eac9894.31344","name":"accessToken?","property":"accessToken","propertyType":"flow","rules":[{"t":"nnull"}],"checkall":"true","repair":false,"outputs":1,"x":160,"y":180,"wires":[["a9fe8f1f.85ec6"]]},{"id":"aa91af03.561b5","type":"switch","z":"2eac9894.31344","name":"accessToken?","property":"accessToken","propertyType":"flow","rules":[{"t":"nnull"}],"checkall":"true","repair":false,"outputs":1,"x":240,"y":260,"wires":[["e5aee1e.8c99a2"]]},{"id":"e5aee1e.8c99a2","type":"switch","z":"2eac9894.31344","name":"variablesIds?","property":"variablesIds","propertyType":"flow","rules":[{"t":"nnull"}],"checkall":"true","repair":false,"outputs":1,"x":242,"y":300,"wires":[["8170c020.b7689"]]},{"id":"e7622a48.5c5c","type":"function","z":"2eac9894.31344","name":"Recursive Data Extraction","func":"let out1 = {};\nlet out2 = {};\nlet dataBuffer = flow.get(\"dataBuffer\") || {};\nlet variablesIds = flow.get(\"variablesIds\");\n\nif (Object.keys(dataBuffer).length == 0) {\n    flow.set(\"startTime\", new Date().getTime());\n    for(i=0; i<Object.keys(variablesIds).length; i++){\n        dataBuffer[Object.keys(variablesIds)[i]]  = []; \n    }\n}\n\nlet newDataBuffer = dataBuffer;\n\nfor(j=0; j<msg.payload.data.length; j++){\n    index = Object.values(variablesIds).indexOf(msg.payload.data[j].variableId);\n    newDataBuffer[Object.keys(variablesIds)[index]] = dataBuffer[Object.keys(variablesIds)[j]].concat(msg.payload.data[j].values);\n}\n\nflow.set(\"dataBuffer\", newDataBuffer);\n\nif (msg.payload.hasOwnProperty(\"hasMoreData\")) {\n    let status = {\"payload\": {\n      \"fill\": \"green\",\n      \"shape\": \"dot\",\n      \"text\": \"Querying data in progress...\"\n    }};\n    out1.from = new Date(msg.payload.hasMoreData.from);\n    out1.to = new Date(msg.payload.hasMoreData.to);\n    return [out1, null, status];\n} else {\n    let status = {\"payload\": {\n      \"fill\": \"green\",\n      \"shape\": \"dot\",\n      \"text\": \"Query completed on \" + new Date().toISOString()\n    }};\n    out2.topic = env.get(\"variablesName\");\n    out2.payload = newDataBuffer;\n    flow.set(\"dataBuffer\", {});\n    out2.queryTime = new Date().getTime() - flow.get(\"startTime\");\n    return [null, out2, status]\n}","outputs":3,"noerr":0,"initialize":"","finalize":"","x":550,"y":382,"wires":[["4cf996b6.8788e"],[],[]]},{"id":"c1130cc1.334a38","type":"function","z":"2eac9894.31344","name":"Create User","func":"// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"POST\";\n\n//set url\nmsg.url = flow.get(\"dataserviceUrl\") + \"/TokenManagerService/users\";\n\n//set body\nmsg.payload = {\n      userName: flow.get(\"dataserviceUser\"),\n      passWord: flow.get(\"dataservicePass\"),\n      familyName: \"myFamily\" + flow.get(\"dataserviceUser\"),\n      givenName: flow.get(\"dataserviceUser\"),\n      email: flow.get(\"dataserviceUser\") + \"@myemail.com\",\n      roles: [\n        {\n          application: \"edgeappdataservice\",\n          role: \"admin\"\n        }]};\n        \n// set headers\nconst strJson = JSON.stringify(msg.payload);\nconst lenJson = Buffer.byteLength(strJson);\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['Content-Length'] = lenJson;\n\nreturn msg;","outputs":1,"noerr":0,"initialize":"","finalize":"","x":490,"y":60,"wires":[["c1f6e182.4aa998"]]},{"id":"c1f6e182.4aa998","type":"http request","z":"2eac9894.31344","name":"","method":"use","ret":"obj","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","authType":"","x":670,"y":60,"wires":[["26febc0a.143604"]]},{"id":"8170c020.b7689","type":"switch","z":"2eac9894.31344","name":"dateFromPicked?","property":"from","propertyType":"msg","rules":[{"t":"nnull"}],"checkall":"true","repair":false,"outputs":1,"x":247,"y":340,"wires":[["28dfc3b6.1ad4b4"]]},{"id":"28dfc3b6.1ad4b4","type":"switch","z":"2eac9894.31344","name":"dateToPicked?","property":"to","propertyType":"msg","rules":[{"t":"nnull"}],"checkall":"true","repair":false,"outputs":1,"x":249,"y":380,"wires":[["4cf996b6.8788e"]]},{"id":"65fdfc19.192044","type":"change","z":"2eac9894.31344","name":"url, user, pass","rules":[{"t":"set","p":"dataserviceUrl","pt":"flow","to":"http://edgeappdataservice:4203","tot":"str"},{"t":"set","p":"dataserviceUser","pt":"flow","to":"nodeUser","tot":"str"},{"t":"set","p":"dataservicePass","pt":"flow","to":"nodePass","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":300,"y":60,"wires":[["c1130cc1.334a38"]]},{"id":"9861416a.5c336","type":"debug","z":"2eac9894.31344","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":590,"y":540,"wires":[]},{"id":"43b4ad2d.c67ae4","type":"tab","label":"Data Service","disabled":false,"info":""},{"id":"f961a0cc.bd3458","type":"subflow:2eac9894.31344","z":"43b4ad2d.c67ae4","name":"","env":[{"name":"variablesNames","value":"Production_GoodPieces,Production_BadPieces,Production_MachSpeed","type":"str"}],"x":560,"y":320,"wires":[["42929859.76c1b8","333a51b4.73052e","e6782a5d.015998"]]},{"id":"cbb42495.702658","type":"inject","z":"43b4ad2d.c67ae4","name":"","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":100,"y":320,"wires":[["1cd28d54.47c24b"]]},{"id":"1cd28d54.47c24b","type":"change","z":"43b4ad2d.c67ae4","name":"getDateFromDashboard","rules":[{"t":"set","p":"from","pt":"msg","to":"from","tot":"global"},{"t":"set","p":"to","pt":"msg","to":"to","tot":"global"}],"action":"","property":"","from":"","to":"","reg":false,"x":310,"y":320,"wires":[["f961a0cc.bd3458"]]},{"id":"d5549daf.02d9d","type":"ui_chart","z":"43b4ad2d.c67ae4","name":"","group":"51523531.c2c9cc","order":1,"width":0,"height":0,"label":"Production Trend","chartType":"line","legend":"true","xformat":"dd HH:mm","interpolate":"linear","nodata":"","dot":false,"ymin":"0","ymax":"500000","removeOlder":"1","removeOlderPoints":"","removeOlderUnit":"86400","cutout":0,"useOneColor":false,"useUTC":false,"colors":["#1c84ce","#ed2c2f","#ff7f0e","#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"],"outputs":1,"x":890,"y":360,"wires":[["efcc6bd8.170618"]]},{"id":"333a51b4.73052e","type":"function","z":"43b4ad2d.c67ae4","name":"Create chart msg","func":"// create base out message\nlet outMsg = {payload:[{}]};\nlet outSeries = [];\nlet tags = Object.keys(msg.payload);\n\nfor(i=0;i<tags.length;i++){\n    outSeries.push(tags[i]);\n}\n\n// create chart properties\noutMsg.payload[0].series = outSeries;\noutMsg.payload[0].labels = [\"\"];\noutMsg.payload[0].data = [];\n\n// create time series\nfor(i=0;i<tags.length;i++){\n    let data = Object.values(msg.payload)[i];\n    let name = Object.keys(msg.payload)[i];\n    outMsg.payload[0].data[i] = [];\n    for (j=0;j<data.length;j++){\n        let ts = new Date(data[j].timestamp).getTime();\n        outMsg.payload[0].data[i].push({\"x\": ts, \"y\": data[j].value});  \n    }\n}\n\nreturn outMsg;","outputs":1,"noerr":0,"initialize":"","finalize":"","x":890,"y":320,"wires":[["d5549daf.02d9d"]],"info":"The aim of this node is to prepare the data received from \"DataService Read Variable\" node, in order to visualize them into a dedicated dashboard.\n\nThe time series data format will be the following:\n\n[{\n\"series\": [\"VarA\", \"VarB\", \"VarC\"],\n\"data\": [\n    [{ \"x\": \"20/10/2021 20:50:50\", \"y\": 5 },\n     { \"x\": \"20/10/2021 20:50:50\", \"y\": 6 },\n     { \"x\": \"20/10/2021 20:50:50\", \"y\": 7 }\n    ],\n    ...,\n    [{ \"x\": \"20/10/2021 20:51:50\", \"y\": 8 },\n     { \"x\": \"20/10/2021 20:51:50\", \"y\": 9 },\n     { \"x\": \"20/10/2021 20:51:50\", \"y\": 10 }\n    ]\n],\n\"labels\": [\"\"]\n}]\n\nThe graph in the dasboard will show the timestamps on the x-axis and the values of the tags on the y-axis."},{"id":"6d7cd2c4.88ca5c","type":"comment","z":"43b4ad2d.c67ae4","name":"Show on UI","info":"","x":870,"y":280,"wires":[]},{"id":"2f3e788a.041378","type":"ui_button","z":"43b4ad2d.c67ae4","name":"","group":"51523531.c2c9cc","order":2,"width":0,"height":0,"passthru":false,"label":"Get Data","tooltip":"","color":"","bgcolor":"","icon":"","payload":"","payloadType":"str","topic":"","x":100,"y":360,"wires":[["1cd28d54.47c24b"]]},{"id":"a925d5ad.bb9f38","type":"change","z":"43b4ad2d.c67ae4","name":"","rules":[{"t":"set","p":"from","pt":"global","to":"payload","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":700,"y":140,"wires":[["20042b0f.55fb34"]]},{"id":"347f3cc9.4e69e4","type":"change","z":"43b4ad2d.c67ae4","name":"","rules":[{"t":"set","p":"to","pt":"global","to":"payload","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":690,"y":180,"wires":[["d1db31a9.23324"]]},{"id":"cac951ed.0d5f6","type":"inject","z":"43b4ad2d.c67ae4","name":"","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"","crontab":"","once":true,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":110,"y":160,"wires":[["46b24162.eb976"]]},{"id":"12a7df76.f47e21","type":"ui_date_picker","z":"43b4ad2d.c67ae4","name":"","label":"From","group":"468e5708.c49398","order":1,"width":0,"height":0,"passthru":true,"topic":"from","x":510,"y":140,"wires":[["a925d5ad.bb9f38"]]},{"id":"7baafcf0.683e04","type":"ui_date_picker","z":"43b4ad2d.c67ae4","name":"","label":"to","group":"38746754.c77e4","order":1,"width":0,"height":0,"passthru":true,"topic":"to","x":510,"y":180,"wires":[["347f3cc9.4e69e4"]]},{"id":"46b24162.eb976","type":"function","z":"43b4ad2d.c67ae4","name":"Default time range","func":"let out1 = {\"payload\": new Date(msg.payload - 1000*60*60*1)};\nlet out2 = {\"payload\": new Date(msg.payload)};\n\nreturn [out1, out2];","outputs":2,"noerr":0,"initialize":"","finalize":"","x":310,"y":160,"wires":[["12a7df76.f47e21"],["7baafcf0.683e04"]]},{"id":"20042b0f.55fb34","type":"debug","z":"43b4ad2d.c67ae4","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":910,"y":140,"wires":[]},{"id":"d1db31a9.23324","type":"debug","z":"43b4ad2d.c67ae4","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":910,"y":180,"wires":[]},{"id":"eb343839.c7e898","type":"comment","z":"43b4ad2d.c67ae4","name":"Select time interval","info":"","x":110,"y":120,"wires":[]},{"id":"633f4d2b.74e574","type":"comment","z":"43b4ad2d.c67ae4","name":"Extract data from Data Service App","info":"","x":160,"y":280,"wires":[]},{"id":"8f3f7314.92199","type":"comment","z":"43b4ad2d.c67ae4","name":"Export CSV file","info":"","x":880,"y":460,"wires":[]},{"id":"72dae201.a802ac","type":"comment","z":"43b4ad2d.c67ae4","name":"Variables of interest to be defined in this node","info":"","x":610,"y":280,"wires":[]},{"id":"a620499c.ced4a8","type":"csv","z":"43b4ad2d.c67ae4","name":"","sep":",","hdrin":"","hdrout":"once","multi":"one","ret":"\\n","temp":"","skip":"0","strings":true,"include_empty_strings":"","include_null_values":"","x":850,"y":540,"wires":[["aab58003.12258"]]},{"id":"42929859.76c1b8","type":"function","z":"43b4ad2d.c67ae4","name":"CSV data arrangement","func":"let data = {\"timestamp\": []};\n\nfor(i=0;i<Object.keys(msg.payload).length;i++){\n    let variable = Object.values(msg.payload)[i];\n    for (j=0;j<variable.length;j++){\n        let newTs = new Date(variable[j].timestamp).getTime()\n        if(data.timestamp.indexOf(newTs) == -1){\n            data.timestamp.push(newTs);  \n        }\n    }\n}\n\ndata.timestamp.sort((a,b)=>a-b).map((el) => {return new Date(el)});\n\nfor(k=0;k<data.timestamp.length;k++){\n    data.timestamp[k] = new Date(parseInt(data.timestamp[k])).toISOString();\n}\n\nfor(i=0;i<Object.keys(msg.payload).length;i++){\n    data[Object.keys(msg.payload)[i]] = new Array(data.timestamp.length).fill(null);\n    let variable = Object.values(msg.payload)[i];\n    for(j=0;j<variable.length;j++){\n        let index = data.timestamp.indexOf(variable[j].timestamp);\n        if(index > -1){\n            data[Object.keys(msg.payload)[i]][index] = variable[j].value\n        }    \n    }\n}\n\nlet buffer = [];\n// Go through all data elements and organize them as [{a: \"\", b: \"\"}, {a: \"\", b: \"\"},...,{a: \"\", b: \"\"}]\nfor(i=0;i<data.timestamp.length;i++){\n    let newRow = {\"timestamp\": data.timestamp[i]};\n    let columns = Object.keys(msg.payload);\n    for(j=0;j<columns.length;j++){\n        newRow[Object.keys(msg.payload)[j]] = data[Object.keys(msg.payload)[j]][i];\n    }\n    buffer.push(newRow);\n}\n\n// Define CSV columns name\nmsg.columns = Object.keys(data).join(\",\");\nmsg.payload = buffer;\nmsg.topic = env.get(\"variablesName\");\nreturn msg;\n","outputs":1,"noerr":0,"initialize":"","finalize":"","x":900,"y":500,"wires":[["a620499c.ced4a8"]],"info":"The aim of this node is to format the data recevied from \"DataService Read Variables\" node, in order to create and save a CSV file with all the datapoints extracted from the Data Service database.\n\nThe CSV file format will be the following:\n\n|timestamp|VarA|VarB|...|VarC|\n|.........|....|....|...|....|\n|.........|....|....|...|....|\n|.........|....|....|...|....|"},{"id":"6b63cb14.ada6f4","type":"comment","z":"43b4ad2d.c67ae4","name":"DATA SERVICE APPLICATION EXAMPLE","info":"","x":180,"y":60,"wires":[]},{"id":"aab58003.12258","type":"file","z":"43b4ad2d.c67ae4","name":"write to file","filename":"/home/nodered/node-red-home/_report/csvdataextract.csv","appendNewline":false,"createDir":true,"overwriteFile":"true","encoding":"none","x":990,"y":540,"wires":[["b5defd29.bf15b"]],"info":"Save a CSV with filename **csvdataextract.csv** containing all the datapoints extracted from Data Service application."},{"id":"b5defd29.bf15b","type":"debug","z":"43b4ad2d.c67ae4","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":850,"y":580,"wires":[]},{"id":"efcc6bd8.170618","type":"debug","z":"43b4ad2d.c67ae4","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":850,"y":400,"wires":[]},{"id":"e6782a5d.015998","type":"debug","z":"43b4ad2d.c67ae4","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","statusVal":"","statusType":"auto","x":650,"y":440,"wires":[]},{"id":"51523531.c2c9cc","type":"ui_group","name":"Default","tab":"10fa4af.63fbeb5","order":3,"disp":true,"width":"12","collapse":false},{"id":"468e5708.c49398","type":"ui_group","name":"From","tab":"10fa4af.63fbeb5","order":1,"disp":true,"width":"6","collapse":false},{"id":"38746754.c77e4","type":"ui_group","name":"To","tab":"10fa4af.63fbeb5","order":2,"disp":true,"width":"6","collapse":false},{"id":"10fa4af.63fbeb5","type":"ui_tab","name":"DatetimePicker","icon":"dashboard","order":4,"disabled":false,"hidden":false}]
+[
+    {
+        "id": "38742bb91ad9d5fc",
+        "type": "subflow",
+        "name": "DataService Read",
+        "info": "# DataService Read Variables\n\nSubflow that implements all the APIs needed to read variables data from DataService Edge App based on their **names**, a **from date** and a **to date**.\n\n### Configuration\n\nConfigure the variables names to be readed in the property **Variables Names** of the node in the format `asset_name.variable_name` separated by commas (no spaces between names and commas, e.g. `MyDevice.CH1,MyDevice.CH2`).\nFor example, to read a variable called **CH1** from the Asset **MyDevice** use **MyDevice.CH1**.\n\n### Input Message\n\nSend the start and end time of the data query by the properties **from** and **to** in the input message.\nBoth dates has to be in ISO Format (e.g. `2022-08-11T13:48:34.064Z`).\n\n**Example input:**\n\n```json\n{\n    \"from\": \"2021-10-10T15:00:00.000Z\",\n    \"to\": \"2021-10-10T20:00:00.000Z\"\n}\n```\n\n### Output\n\nThe node will return a message with the following properties:\n\n- **payload:** object that contains the values and timestamps for each requested variable\n- **queryTime:** number of milliseconds elapsed for the query\n- **variablesNames:** array of the requested variables\n- **variablesIds:** array of ids of the requested variables \n\n**Example output:**\n\n```json\n{\n    \"payload\":{\n        \"MyDevice.CH1\":[\n            {\n                \"timestamp\":\"2022-08-10T11:42:54.506Z\",\n                \"value\":11697,\n                \"qualitycode\":192\n            },\n            {\n                \"timestamp\":\"2022-08-10T11:42:55.506Z\",\n                \"value\":14829,\n                \"qualitycode\":192\n            }\n        ],\n        \"MyDevice.CH2\":[\n            {\n                \"timestamp\":\"2022-08-10T11:42:54.506Z\",\n                \"value\":12514,\n                \"qualitycode\":192\n            },\n            {\n                \"timestamp\":\"2022-08-10T11:42:55.506Z\",\n                \"value\":11298,\n                \"qualitycode\":192\n            }\n        ]},\n        \"queryTime\":482,\n        \"variablesNames\":[\n            \"MyDevice.CH1\",\n            \"MyDevice.CH2\"\n        ],\n        \"variablesIds\":[\n            \"56b571010bac431e91cd7f5bd9abef7c\",\n            \"ca0c7878698e4885a09782f02516ab35\"\n        ]\n}\n```\n\n",
+        "category": "DataService",
+        "in": [
+            {
+                "x": 100,
+                "y": 340,
+                "wires": [
+                    {
+                        "id": "f64d0811e72a5d32"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 940,
+                "y": 580,
+                "wires": [
+                    {
+                        "id": "1e90d1846fd550eb",
+                        "port": 2
+                    }
+                ]
+            }
+        ],
+        "env": [
+            {
+                "name": "readVariablesNames",
+                "type": "str",
+                "value": "",
+                "ui": {
+                    "icon": "font-awesome/fa-tags",
+                    "label": {
+                        "en-US": "Variables Names"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str",
+                            "env"
+                        ]
+                    }
+                }
+            }
+        ],
+        "meta": {
+            "module": "DataServiceReadVariables",
+            "version": "0.0.2",
+            "desc": "Subflow that implements all the APIs needed to Read variables data from DataService Edge App",
+            "keywords": "dataservice, variables, read",
+            "license": "MIT"
+        },
+        "color": "#A6BBCF",
+        "icon": "node-red/leveldb.png",
+        "status": {
+            "x": 1120,
+            "y": 520,
+            "wires": [
+                {
+                    "id": "fc41b543821343df",
+                    "port": 0
+                },
+                {
+                    "id": "1e90d1846fd550eb",
+                    "port": 1
+                }
+            ]
+        }
+    },
+    {
+        "id": "abc5035a37790f6e",
+        "type": "function",
+        "z": "38742bb91ad9d5fc",
+        "name": "Create Token Request",
+        "func": "// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"POST\";\n\n//set url\nmsg.url = flow.get(\"dataserviceReadUrl\") + \"/TokenManagerService/oauth/token\";\n\n//set body\nmsg.payload = {\n    \"appName\": \"edgeappdataservice\",\n    \"appVersion\": \"1.1\",\n    \"hostTenant\": \"edge\",\n    \"userTenant\": \"edge\"\n    };\n        \n// set headers\nconst strJson = JSON.stringify(msg.payload);\nconst lenJson = Buffer.byteLength(strJson);\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['Content-Length'] = lenJson;\n\n// set auth header\nlet authStr = flow.get(\"dataserviceReadUser\") + \":\" + flow.get(\"dataserviceReadPass\");\nlet basicOut = Buffer.from(authStr).toString('base64');\nmsg.headers['X-SPACE-AUTH-KEY'] = 'Basic ' + basicOut;\n\nreturn msg;\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 140,
+        "wires": [
+            [
+                "0d3fc59067917e1a"
+            ]
+        ]
+    },
+    {
+        "id": "0d3fc59067917e1a",
+        "type": "http request",
+        "z": "38742bb91ad9d5fc",
+        "name": "",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "x": 770,
+        "y": 140,
+        "wires": [
+            [
+                "df074c753dcd2565"
+            ]
+        ]
+    },
+    {
+        "id": "8e1c0ad053c512be",
+        "type": "inject",
+        "z": "38742bb91ad9d5fc",
+        "name": "At Start",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 80,
+        "wires": [
+            [
+                "3af489deced21476"
+            ]
+        ]
+    },
+    {
+        "id": "df074c753dcd2565",
+        "type": "change",
+        "z": "38742bb91ad9d5fc",
+        "name": "set accessToken",
+        "rules": [
+            {
+                "t": "set",
+                "p": "readAccessToken",
+                "pt": "flow",
+                "to": "payload.access_token",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 990,
+        "y": 140,
+        "wires": [
+            [
+                "0bd4c145ad009f30"
+            ]
+        ]
+    },
+    {
+        "id": "c118ea59aee9d8b1",
+        "type": "function",
+        "z": "38742bb91ad9d5fc",
+        "name": "Create Data Request",
+        "func": "// init msg\nlet outMsg = {\"headers\": {}};\n\n// set method\noutMsg.method = \"GET\";\n\n// get parameters for data query\n//from like '2021-10-10T10:00:00.000Z';\n//to like'2021-10-10T11:00:00.000Z';\nconst from = new Date(msg.from);\nconst to = new Date(msg.to);\n\n// set baseRoute\noutMsg.baseRoute = msg.baseRoute;\nlet route = msg.baseRoute + \"&from=\" + from.toISOString();\nroute += \"&to=\"   + to.toISOString();\nroute += \"&order=Ascending\";\n//set url\noutMsg.url = route;\n\n// set token header\noutMsg.headers[\"authorization\"] = flow.get(\"readAccessToken\");\n\n// set variablesmap in message\noutMsg.variablesNames = msg.variablesNames;\noutMsg.variablesIds = msg.variablesIds;\n\nif(msg.dataBuffer == \"\")\n{\n    flow.set(\"readStartTime\", new Date().getTime());\n    outMsg.dataBuffer = {};\n    \n    for(i = 0; i < msg.variablesIds.length; i++){\n        outMsg.dataBuffer[msg.variablesIds[i]]  = []; \n    }\n}\nelse\n{\n    outMsg.dataBuffer = msg.dataBuffer;\n}\n\n\nreturn outMsg;\n    \n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 420,
+        "wires": [
+            [
+                "4cbbd503ba076bf1"
+            ]
+        ]
+    },
+    {
+        "id": "4cbbd503ba076bf1",
+        "type": "http request",
+        "z": "38742bb91ad9d5fc",
+        "name": "",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 830,
+        "y": 420,
+        "wires": [
+            [
+                "1e90d1846fd550eb"
+            ]
+        ]
+    },
+    {
+        "id": "601fc2a7dd9e12ca",
+        "type": "function",
+        "z": "38742bb91ad9d5fc",
+        "name": "Create Var Request",
+        "func": "// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"GET\";\n\n//set url\nmsg.url = flow.get(\"dataserviceReadUrl\") + \"/DataService/Variables\";\n\n// set token header\nmsg.headers[\"authorization\"] = flow.get(\"readAccessToken\");\n\nreturn msg;\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 570,
+        "y": 260,
+        "wires": [
+            [
+                "22d89b89cdc156cb"
+            ]
+        ]
+    },
+    {
+        "id": "22d89b89cdc156cb",
+        "type": "http request",
+        "z": "38742bb91ad9d5fc",
+        "name": "",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 770,
+        "y": 260,
+        "wires": [
+            [
+                "fc41b543821343df"
+            ]
+        ]
+    },
+    {
+        "id": "fc41b543821343df",
+        "type": "function",
+        "z": "38742bb91ad9d5fc",
+        "name": "Set variablesMap",
+        "func": "// create out message\nlet outMsg = {\"payload\": {\n      \"fill\": \"red\",\n      \"shape\": \"dot\",\n      \"text\": \"Connected but no variables configured.\"\n}};\n\n// get names of variables in input to be extracted from Data Service app\nlet varName = env.get(\"readVariablesNames\");\nlet varNameArray = varName.split(\",\");\n\n// get the assets map\nlet assetsMap = flow.get(\"readAssetsMap\");\n\n// init variables Map\nlet variablesMap = {};\n\n// iterate through variables in dataservice\nfor(let i = 0; i < msg.payload.variables.length; i++){\n    // create variable name as assetName.variableName\n    let varName = assetsMap[msg.payload.variables[i].assetId] + \".\" + msg.payload.variables[i].variableName;\n\n    // search for varName in input variables\n    if(varNameArray.indexOf(varName) != -1)\n    {\n        // set variables map as varName : varId\n        variablesMap[varName] = msg.payload.variables[i].variableId;\n    }\n}\n\n\nif (Object.keys(variablesMap).length > 0) {\n    flow.set(\"readVariablesMap\", variablesMap);\n    // set status\n    outMsg.payload = {\n      \"fill\": \"green\",\n      \"shape\": \"dot\",\n      \"text\": \"Connected and Configured for reading \" + Object.keys(variablesMap).length + \" variables.\"\n    };\n}\nelse\n{\n    flow.set(\"readVariablesMap\", null);\n}\n\n\nreturn outMsg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 990,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0bd4c145ad009f30",
+        "type": "switch",
+        "z": "38742bb91ad9d5fc",
+        "name": "accessToken?",
+        "property": "readAccessToken",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 320,
+        "y": 200,
+        "wires": [
+            [
+                "2c94fc857dac2dd2"
+            ]
+        ]
+    },
+    {
+        "id": "f64d0811e72a5d32",
+        "type": "switch",
+        "z": "38742bb91ad9d5fc",
+        "name": "accessToken?",
+        "property": "readAccessToken",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 340,
+        "y": 340,
+        "wires": [
+            [
+                "f710f89cb930c459"
+            ]
+        ]
+    },
+    {
+        "id": "f710f89cb930c459",
+        "type": "switch",
+        "z": "38742bb91ad9d5fc",
+        "name": "variablesMap?",
+        "property": "readVariablesMap",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 340,
+        "y": 380,
+        "wires": [
+            [
+                "6989400a31aef7a2"
+            ]
+        ]
+    },
+    {
+        "id": "ff7e0f820e489bec",
+        "type": "function",
+        "z": "38742bb91ad9d5fc",
+        "name": "Create User",
+        "func": "// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"POST\";\n\n//set url\nmsg.url = flow.get(\"dataserviceReadUrl\") + \"/TokenManagerService/users\";\n\nlet user = flow.get(\"dataserviceReadUser\");\nlet password = flow.get(\"dataserviceReadPass\");\n\n//set body\nmsg.payload = {\n      userName: user,\n      passWord: password,\n      familyName: \"myFamily\" + user,\n      givenName: user,\n      email: user + \"@myemail.com\",\n      roles: [\n        {\n          application: \"edgeappdataservice\",\n          role: \"admin\"\n        }]};\n        \n// set headers\nconst strJson = JSON.stringify(msg.payload);\nconst lenJson = Buffer.byteLength(strJson);\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['Content-Length'] = lenJson;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 80,
+        "wires": [
+            [
+                "dde55f9ad647d193"
+            ]
+        ]
+    },
+    {
+        "id": "dde55f9ad647d193",
+        "type": "http request",
+        "z": "38742bb91ad9d5fc",
+        "name": "",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 770,
+        "y": 80,
+        "wires": [
+            [
+                "abc5035a37790f6e"
+            ]
+        ]
+    },
+    {
+        "id": "6989400a31aef7a2",
+        "type": "switch",
+        "z": "38742bb91ad9d5fc",
+        "name": "dateFromPicked?",
+        "property": "from",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 330,
+        "y": 420,
+        "wires": [
+            [
+                "90de0f1e385ed490"
+            ]
+        ]
+    },
+    {
+        "id": "90de0f1e385ed490",
+        "type": "switch",
+        "z": "38742bb91ad9d5fc",
+        "name": "dateToPicked?",
+        "property": "to",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 340,
+        "y": 460,
+        "wires": [
+            [
+                "0459b588c752ed44"
+            ]
+        ]
+    },
+    {
+        "id": "3af489deced21476",
+        "type": "change",
+        "z": "38742bb91ad9d5fc",
+        "name": "url, user, pass",
+        "rules": [
+            {
+                "t": "set",
+                "p": "dataserviceReadUrl",
+                "pt": "flow",
+                "to": "http://edgeappdataservice:4203",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "dataserviceReadUser",
+                "pt": "flow",
+                "to": "nodeReadUser",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "dataserviceReadPass",
+                "pt": "flow",
+                "to": "nodeReadPass",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 340,
+        "y": 80,
+        "wires": [
+            [
+                "ff7e0f820e489bec"
+            ]
+        ]
+    },
+    {
+        "id": "2c94fc857dac2dd2",
+        "type": "function",
+        "z": "38742bb91ad9d5fc",
+        "name": "Create Asset Request",
+        "func": "// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"GET\";\n\n//set url\nmsg.url = flow.get(\"dataserviceReadUrl\") + \"/AssetService/Assets\";\n\n// set token header\nmsg.headers[\"authorization\"] = flow.get(\"readAccessToken\");\n\nreturn msg;\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 200,
+        "wires": [
+            [
+                "963417999d6e9b8e"
+            ]
+        ]
+    },
+    {
+        "id": "963417999d6e9b8e",
+        "type": "http request",
+        "z": "38742bb91ad9d5fc",
+        "name": "",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "x": 770,
+        "y": 200,
+        "wires": [
+            [
+                "b4e5f96e77ed5063"
+            ]
+        ]
+    },
+    {
+        "id": "b4e5f96e77ed5063",
+        "type": "function",
+        "z": "38742bb91ad9d5fc",
+        "name": "Set assetsMap",
+        "func": "// init assets list\nlet assetsMap = {};\n\nfor(i=0; i < msg.payload.assets.length; i++){\n    // for each asset set a key:value property as id:name\n    assetsMap[msg.payload.assets[i].assetId] = msg.payload.assets[i].name;\n}\n\n// set assets list as flow tag\nflow.set(\"readAssetsMap\", assetsMap);\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 200,
+        "wires": [
+            [
+                "601fc2a7dd9e12ca"
+            ]
+        ]
+    },
+    {
+        "id": "0459b588c752ed44",
+        "type": "function",
+        "z": "38742bb91ad9d5fc",
+        "name": "Init Request",
+        "func": "\n\n// init variablesNames and Ids\nconst variablesMap = flow.get(\"readVariablesMap\");\nmsg.variablesNames = Object.keys(variablesMap);\nmsg.variablesIds = Object.values(variablesMap);\n\n// init databuffer\nmsg.dataBuffer = \"\";\n\n// init baseRoute\nmsg.baseRoute = flow.get(\"dataserviceReadUrl\") +\n                \"/DataService/Data?variableIds=[\\\"\" \n                + msg.variablesIds.join(\"\\\",\\\"\") + \"\\\"]\";\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 570,
+        "y": 340,
+        "wires": [
+            [
+                "c118ea59aee9d8b1"
+            ]
+        ]
+    },
+    {
+        "id": "1e90d1846fd550eb",
+        "type": "function",
+        "z": "38742bb91ad9d5fc",
+        "name": "Recursive Data Extraction",
+        "func": "\n// loop over data received from dataservice\nfor(i=0; i<msg.payload.data.length; i++){\n    let varData = msg.payload.data[i];\n    // concatenate actual databuffer with new data \n    msg.dataBuffer[varData.variableId] = msg.dataBuffer[varData.variableId].concat(varData.values);\n}\n\n// check if some data are still to be queried\nif (msg.payload.hasOwnProperty(\"hasMoreData\")) {\n    // create out for next query\n    let out = {\n        \"baseRoute\": msg.baseRoute,\n        \"from\": msg.payload.hasMoreData.from,\n        \"to\": msg.payload.hasMoreData.to,\n        \"dataBuffer\": msg.dataBuffer,\n        \"variablesNames\": msg.variablesNames,\n        \"variablesIds\": msg.variablesIds\n    };\n    // create status message\n    let status = {\"payload\": {\n      \"fill\": \"green\",\n      \"shape\": \"dot\",\n      \"text\": \"Querying data in progress...\"\n    }};\n    \n    return [out, status, null];\n    \n}\nelse {\n    // change ids with names before sending databuffer \n    let newDataBuffer = {};\n    let numPoints = 0;\n    for(let i = 0; i < msg.variablesIds.length; i++)\n    {\n        newDataBuffer[msg.variablesNames[i]] = msg.dataBuffer[msg.variablesIds[i]];\n        numPoints += msg.dataBuffer[msg.variablesIds[i]].length\n    }\n    \n    // create final out\n    let out = {\n        \"payload\": newDataBuffer,\n        \"queryTime\": new Date().getTime() - flow.get(\"readStartTime\"),\n        \"variablesNames\": msg.variablesNames,\n        \"variablesIds\": msg.variablesIds\n    };\n    // create status message\n    let status = {\"payload\": {\n      \"fill\": \"green\",\n      \"shape\": \"dot\",\n      \"text\": new Date().toISOString() + \n                \"- Read \" + numPoints +\n                \" values from \" + msg.variablesIds.length +\n                \" variables in \" + out.queryTime/1000 + \"s.\"\n    }};\n\n    return [null, status, out]\n}",
+        "outputs": 3,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 520,
+        "wires": [
+            [
+                "c118ea59aee9d8b1"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "ba048851b7230de7",
+        "type": "tab",
+        "label": "Data Service",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "cabc3001226d0a31",
+        "type": "inject",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 320,
+        "wires": [
+            [
+                "7e8a2ee7bab56d01"
+            ]
+        ]
+    },
+    {
+        "id": "7e8a2ee7bab56d01",
+        "type": "change",
+        "z": "ba048851b7230de7",
+        "name": "getDateFromDashboard",
+        "rules": [
+            {
+                "t": "set",
+                "p": "from",
+                "pt": "msg",
+                "to": "from",
+                "tot": "global"
+            },
+            {
+                "t": "set",
+                "p": "to",
+                "pt": "msg",
+                "to": "to",
+                "tot": "global"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 310,
+        "y": 320,
+        "wires": [
+            [
+                "e1816a5c63eb59f3"
+            ]
+        ]
+    },
+    {
+        "id": "72fbb1d4871ffdd0",
+        "type": "ui_chart",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "group": "918d230342c74806",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Production Trend",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "dd HH:mm",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "500000",
+        "removeOlder": "1",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "86400",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1c84ce",
+            "#ed2c2f",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "x": 1070,
+        "y": 360,
+        "wires": [
+            [
+                "2dc58c41a73f208d"
+            ]
+        ]
+    },
+    {
+        "id": "8363d43c1dbbd0c7",
+        "type": "function",
+        "z": "ba048851b7230de7",
+        "name": "Create chart msg",
+        "func": "// create base out message\nlet outMsg = {payload:[{}]};\nlet outSeries = [];\nlet tags = Object.keys(msg.payload);\n\nfor(i=0;i<tags.length;i++){\n    outSeries.push(tags[i]);\n}\n\n// create chart properties\noutMsg.payload[0].series = outSeries;\noutMsg.payload[0].labels = [\"\"];\noutMsg.payload[0].data = [];\n\n// create time series\nfor(i=0;i<tags.length;i++){\n    let data = Object.values(msg.payload)[i];\n    let name = Object.keys(msg.payload)[i];\n    outMsg.payload[0].data[i] = [];\n    for (j=0;j<data.length;j++){\n        let ts = new Date(data[j].timestamp).getTime();\n        outMsg.payload[0].data[i].push({\"x\": ts, \"y\": data[j].value});  \n    }\n}\n\nreturn outMsg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1070,
+        "y": 320,
+        "wires": [
+            [
+                "72fbb1d4871ffdd0"
+            ]
+        ],
+        "info": "The aim of this node is to prepare the data received from \"DataService Read Variable\" node, in order to visualize them into a dedicated dashboard.\n\nThe time series data format will be the following:\n\n[{\n\"series\": [\"VarA\", \"VarB\", \"VarC\"],\n\"data\": [\n    [{ \"x\": \"20/10/2021 20:50:50\", \"y\": 5 },\n     { \"x\": \"20/10/2021 20:50:50\", \"y\": 6 },\n     { \"x\": \"20/10/2021 20:50:50\", \"y\": 7 }\n    ],\n    ...,\n    [{ \"x\": \"20/10/2021 20:51:50\", \"y\": 8 },\n     { \"x\": \"20/10/2021 20:51:50\", \"y\": 9 },\n     { \"x\": \"20/10/2021 20:51:50\", \"y\": 10 }\n    ]\n],\n\"labels\": [\"\"]\n}]\n\nThe graph in the dasboard will show the timestamps on the x-axis and the values of the tags on the y-axis."
+    },
+    {
+        "id": "e759c4c4e1f7931c",
+        "type": "comment",
+        "z": "ba048851b7230de7",
+        "name": "Show on UI",
+        "info": "",
+        "x": 1050,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "2429043895b23f2a",
+        "type": "ui_button",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "group": "918d230342c74806",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Get Data",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 100,
+        "y": 360,
+        "wires": [
+            [
+                "7e8a2ee7bab56d01"
+            ]
+        ]
+    },
+    {
+        "id": "6f90dfe5e58a756b",
+        "type": "change",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "from",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 700,
+        "y": 140,
+        "wires": [
+            [
+                "140e2824218a05d5"
+            ]
+        ]
+    },
+    {
+        "id": "329ba13270bfca17",
+        "type": "change",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "to",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 690,
+        "y": 180,
+        "wires": [
+            [
+                "618932295b951bd7"
+            ]
+        ]
+    },
+    {
+        "id": "8863ee3a212131c7",
+        "type": "inject",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 160,
+        "wires": [
+            [
+                "e1c40a9d736c0b9b"
+            ]
+        ]
+    },
+    {
+        "id": "852e418c09912b2b",
+        "type": "ui_date_picker",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "label": "From",
+        "group": "bf34f3796d0a3c50",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "topic": "from",
+        "x": 510,
+        "y": 140,
+        "wires": [
+            [
+                "6f90dfe5e58a756b"
+            ]
+        ]
+    },
+    {
+        "id": "efdeb363ac0fd0b3",
+        "type": "ui_date_picker",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "label": "to",
+        "group": "7d508c6e431c7fc7",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "topic": "to",
+        "x": 510,
+        "y": 180,
+        "wires": [
+            [
+                "329ba13270bfca17"
+            ]
+        ]
+    },
+    {
+        "id": "e1c40a9d736c0b9b",
+        "type": "function",
+        "z": "ba048851b7230de7",
+        "name": "Default time range",
+        "func": "let out1 = {\"payload\": new Date(msg.payload - 1000*60*60*1)};\nlet out2 = {\"payload\": new Date(msg.payload)};\n\nreturn [out1, out2];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 310,
+        "y": 160,
+        "wires": [
+            [
+                "852e418c09912b2b"
+            ],
+            [
+                "efdeb363ac0fd0b3"
+            ]
+        ]
+    },
+    {
+        "id": "140e2824218a05d5",
+        "type": "debug",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 910,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "618932295b951bd7",
+        "type": "debug",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 910,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "1b1502d83e318687",
+        "type": "comment",
+        "z": "ba048851b7230de7",
+        "name": "Select time interval",
+        "info": "",
+        "x": 110,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "e518b9b49d8d4088",
+        "type": "comment",
+        "z": "ba048851b7230de7",
+        "name": "Extract data from Data Service App",
+        "info": "",
+        "x": 160,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "23487b0a4ddcb3e5",
+        "type": "comment",
+        "z": "ba048851b7230de7",
+        "name": "Export CSV file",
+        "info": "",
+        "x": 1060,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "1d29cfca72a6933e",
+        "type": "comment",
+        "z": "ba048851b7230de7",
+        "name": "Variables of interest to be defined in this node",
+        "info": "",
+        "x": 610,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "5607bac6acd42029",
+        "type": "csv",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "sep": ",",
+        "hdrin": "",
+        "hdrout": "once",
+        "multi": "one",
+        "ret": "\\n",
+        "temp": "",
+        "skip": "0",
+        "strings": true,
+        "include_empty_strings": "",
+        "include_null_values": "",
+        "x": 1030,
+        "y": 540,
+        "wires": [
+            [
+                "8458c07ac8ab94af"
+            ]
+        ]
+    },
+    {
+        "id": "a365e171cbe733ca",
+        "type": "function",
+        "z": "ba048851b7230de7",
+        "name": "CSV data arrangement",
+        "func": "let data = {\"timestamp\": []};\n\nfor(i=0;i<Object.keys(msg.payload).length;i++){\n    let variable = Object.values(msg.payload)[i];\n    for (j=0;j<variable.length;j++){\n        let newTs = new Date(variable[j].timestamp).getTime()\n        if(data.timestamp.indexOf(newTs) == -1){\n            data.timestamp.push(newTs);  \n        }\n    }\n}\n\ndata.timestamp.sort((a,b)=>a-b).map((el) => {return new Date(el)});\n\nfor(k=0;k<data.timestamp.length;k++){\n    data.timestamp[k] = new Date(parseInt(data.timestamp[k])).toISOString();\n}\n\nfor(i=0;i<Object.keys(msg.payload).length;i++){\n    data[Object.keys(msg.payload)[i]] = new Array(data.timestamp.length).fill(null);\n    let variable = Object.values(msg.payload)[i];\n    for(j=0;j<variable.length;j++){\n        let index = data.timestamp.indexOf(variable[j].timestamp);\n        if(index > -1){\n            data[Object.keys(msg.payload)[i]][index] = variable[j].value\n        }    \n    }\n}\n\nlet buffer = [];\n// Go through all data elements and organize them as [{a: \"\", b: \"\"}, {a: \"\", b: \"\"},...,{a: \"\", b: \"\"}]\nfor(i=0;i<data.timestamp.length;i++){\n    let newRow = {\"timestamp\": data.timestamp[i]};\n    let columns = Object.keys(msg.payload);\n    for(j=0;j<columns.length;j++){\n        newRow[Object.keys(msg.payload)[j]] = data[Object.keys(msg.payload)[j]][i];\n    }\n    buffer.push(newRow);\n}\n\n// Define CSV columns name\nmsg.columns = Object.keys(data).join(\",\");\nmsg.payload = buffer;\nmsg.topic = env.get(\"variablesName\");\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1080,
+        "y": 500,
+        "wires": [
+            [
+                "5607bac6acd42029",
+                "854014c83fb8b1ba"
+            ]
+        ],
+        "info": "The aim of this node is to format the data recevied from \"DataService Read Variables\" node, in order to create and save a CSV file with all the datapoints extracted from the Data Service database.\n\nThe CSV file format will be the following:\n\n|timestamp|VarA|VarB|...|VarC|\n|.........|....|....|...|....|\n|.........|....|....|...|....|\n|.........|....|....|...|....|"
+    },
+    {
+        "id": "406dfdb3c5bbec6e",
+        "type": "comment",
+        "z": "ba048851b7230de7",
+        "name": "DATA SERVICE APPLICATION EXAMPLE",
+        "info": "",
+        "x": 180,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "8458c07ac8ab94af",
+        "type": "file",
+        "z": "ba048851b7230de7",
+        "name": "write to file",
+        "filename": "/data/_report/csvdataextract.csv",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 1170,
+        "y": 540,
+        "wires": [
+            [
+                "101b2f38291f010f"
+            ]
+        ],
+        "info": "Save a CSV with filename **csvdataextract.csv** containing all the datapoints extracted from Data Service application."
+    },
+    {
+        "id": "101b2f38291f010f",
+        "type": "debug",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1030,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "2dc58c41a73f208d",
+        "type": "debug",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1030,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "589e9323d1d7e28d",
+        "type": "debug",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 770,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "e1816a5c63eb59f3",
+        "type": "subflow:38742bb91ad9d5fc",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "env": [
+            {
+                "name": "readVariablesNames",
+                "value": "Production.Production.GoodPieces,Production.Production.BadPieces,Production.Production.MachSpeedSeconds",
+                "type": "str"
+            }
+        ],
+        "x": 610,
+        "y": 320,
+        "wires": [
+            [
+                "8363d43c1dbbd0c7",
+                "589e9323d1d7e28d",
+                "a365e171cbe733ca"
+            ]
+        ]
+    },
+    {
+        "id": "cbf17c7b27d629f2",
+        "type": "file",
+        "z": "ba048851b7230de7",
+        "name": "write to file",
+        "filename": "/home/nodered/node-red-home/_report/csvdataextract.csv",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 1170,
+        "y": 620,
+        "wires": [
+            []
+        ],
+        "info": "Save a CSV with filename **csvdataextract.csv** containing all the datapoints extracted from Data Service application."
+    },
+    {
+        "id": "854014c83fb8b1ba",
+        "type": "debug",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1230,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "918d230342c74806",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "6d97e5d7c8f73ec7",
+        "order": 3,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "bf34f3796d0a3c50",
+        "type": "ui_group",
+        "name": "From",
+        "tab": "6d97e5d7c8f73ec7",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "7d508c6e431c7fc7",
+        "type": "ui_group",
+        "name": "To",
+        "tab": "6d97e5d7c8f73ec7",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "6d97e5d7c8f73ec7",
+        "type": "ui_tab",
+        "name": "DatetimePicker",
+        "icon": "dashboard",
+        "order": 4,
+        "disabled": false,
+        "hidden": false
+    }
+]
