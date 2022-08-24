@@ -1,6 +1,6 @@
 # Data Service Development Kit Getting Started
 
-Using the Data Service Development Kit app you can develop your own apps based on the Data Service and integrate them into the Siemens Industrial Edge Management System.
+Using the Data Service Development Kit app you can develop your own apps based on the Data Service, test your app locally with simulated data to make sure your it behaves the same once you deploy your app to Industrial Edge. - [Data Service Development Kit Getting Started](#data-service-development-kit-getting-started)
 
 - [Data Service Development Kit Getting Started](#data-service-development-kit-getting-started)
   - [Description](#description)
@@ -35,11 +35,11 @@ The simulation tool - provided by the Development Kit - generates a **Sinus Sign
 
 ### Prerequisites
 
-- Data Service Development Kit for Industrial Edge V.1.1.0
+- Data Service Development Kit for Industrial Edge V.1.3.0
 
 You can download the Data Service Development Kit Bundle to your computer from [Siemens Industry Online Support (SIOS ID 109792717)](https://support.industry.siemens.com/cs/ww/en/view/109792717). The bundle includes the following components:
 
-- Docker file: docker-compose.yml
+- Docker app: docker-compose.yml
 - User documentation
 - OpenAPI specification
 - Application example
@@ -50,7 +50,7 @@ You can download the Data Service Development Kit Bundle to your computer from [
 
 This GitHub-Repository contains:
 
-- adapted Docker file:  [docker-compose.yml](./docker-compose.yml)
+- adapted [docker-compose.yml](./docker-compose.yml)
 - NodeRED flow: [flows.json](./src/NodeRED/flows.json)
 - [User documentation](./docs/Visualization_example_value.md#description)
 
@@ -87,7 +87,10 @@ The guide above explains how to extract data from a PLC data source, save data i
 
 ## Contribution
 
-Thanks for your interest in contributing. Anybody is free to report bugs, unclear documentation, and other problems regarding this repository in the Issues section or, even better, is free to propose any changes to this repository using Merge Requests.
+Thank you for your interest in contributing. Anybody is free to report bugs, unclear documentation, and other problems regarding this repository in the Issues section.
+Additionally everybody is free to propose any changes to this repository using Pull Requests.
+
+If you are interested in contributing via Pull Request, please check the [Contribution License Agreement](Siemens_CLA_1.1.pdf) and forward a signed copy to [industrialedge.industry@siemens.com](mailto:industrialedge.industry@siemens.com?subject=CLA%20Agreement%20Industrial-Edge).
 
 ## Licence and Legal Information
 
