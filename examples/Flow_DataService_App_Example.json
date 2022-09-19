@@ -1,28 +1,28 @@
 [
     {
-        "id": "38742bb91ad9d5fc",
+        "id": "47c65435a62cd49d",
         "type": "subflow",
         "name": "DataService Read",
-        "info": "# DataService Read Variables\n\nSubflow that implements all the APIs needed to read variables data from DataService Edge App based on their **names**, a **from date** and a **to date**.\n\n### Configuration\n\nConfigure the variables names to be readed in the property **Variables Names** of the node in the format `asset_name.variable_name` separated by commas (no spaces between names and commas, e.g. `MyDevice.CH1,MyDevice.CH2`).\nFor example, to read a variable called **CH1** from the Asset **MyDevice** use **MyDevice.CH1**.\n\n### Input Message\n\nSend the start and end time of the data query by the properties **from** and **to** in the input message.\nBoth dates has to be in ISO Format (e.g. `2022-08-11T13:48:34.064Z`).\n\n**Example input:**\n\n```json\n{\n    \"from\": \"2021-10-10T15:00:00.000Z\",\n    \"to\": \"2021-10-10T20:00:00.000Z\"\n}\n```\n\n### Output\n\nThe node will return a message with the following properties:\n\n- **payload:** object that contains the values and timestamps for each requested variable\n- **queryTime:** number of milliseconds elapsed for the query\n- **variablesNames:** array of the requested variables\n- **variablesIds:** array of ids of the requested variables \n\n**Example output:**\n\n```json\n{\n    \"payload\":{\n        \"MyDevice.CH1\":[\n            {\n                \"timestamp\":\"2022-08-10T11:42:54.506Z\",\n                \"value\":11697,\n                \"qualitycode\":192\n            },\n            {\n                \"timestamp\":\"2022-08-10T11:42:55.506Z\",\n                \"value\":14829,\n                \"qualitycode\":192\n            }\n        ],\n        \"MyDevice.CH2\":[\n            {\n                \"timestamp\":\"2022-08-10T11:42:54.506Z\",\n                \"value\":12514,\n                \"qualitycode\":192\n            },\n            {\n                \"timestamp\":\"2022-08-10T11:42:55.506Z\",\n                \"value\":11298,\n                \"qualitycode\":192\n            }\n        ]},\n        \"queryTime\":482,\n        \"variablesNames\":[\n            \"MyDevice.CH1\",\n            \"MyDevice.CH2\"\n        ],\n        \"variablesIds\":[\n            \"56b571010bac431e91cd7f5bd9abef7c\",\n            \"ca0c7878698e4885a09782f02516ab35\"\n        ]\n}\n```\n\n",
+        "info": "# DataService Read Subflow Node\n\nSubflow that implements all the APIs needed to read variables data from **DataService Edge App version >= 1.4.0** based on their **names**, a **from date** and a **to date**.\n\n**Configuration:**\n\nConfigure the variables names to be read in the property **Variables Names** of the node in the format `asset_name.variable_name` separated by commas (no spaces between names and commas, e.g. `MyDevice.CH1,MyDevice.CH2`).\nFor example, to read a variable called **CH1** from the Asset **MyDevice** use **MyDevice.CH1**.\n\nBy checking the **Remote IED checkbox** is it possible to configure the address of the IED that runs **DataService version >= 1.4.0** to be connected.\nFor connecting to a remote DataService instance, the **login credentials** of the IED to be connect are also needed.\nIf the checkbox is **empty** the subflow will try to connect to the local DataService App running on the same IED that runs this node.\n\n**Input Message:**\n\nSend the start and end time of the data query by the properties **from** and **to** in the input message.\nBoth dates has to be in ISO Format (e.g. `2022-08-11T13:48:34.064Z`).\n\n**Example input:**\n\n```json\n{\n  \"from\": \"2021-10-10T15:00:00.000Z\",\n  \"to\": \"2021-10-10T20:00:00.000Z\"\n}\n```\n\n**Output:**\n\nThe node will return a message with the following properties:\n\n- **payload:** object that contains the values and timestamps for each requested variable\n- **queryTime:** number of milliseconds elapsed for the query\n- **variablesNames:** array of the requested variables\n- **variablesIds:** array of ids of the requested variables\n\n**Example output:**\n\n```json\n{\n  \"payload\": {\n    \"MyDevice.CH1\": [\n      {\n        \"timestamp\": \"2022-08-10T11:42:54.506Z\",\n        \"value\": 11697,\n        \"qualitycode\": 192\n      },\n      {\n        \"timestamp\": \"2022-08-10T11:42:55.506Z\",\n        \"value\": 14829,\n        \"qualitycode\": 192\n      }\n    ],\n    \"MyDevice.CH2\": [\n      {\n        \"timestamp\": \"2022-08-10T11:42:54.506Z\",\n        \"value\": 12514,\n        \"qualitycode\": 192\n      },\n      {\n        \"timestamp\": \"2022-08-10T11:42:55.506Z\",\n        \"value\": 11298,\n        \"qualitycode\": 192\n      }\n    ]\n  },\n  \"queryTime\": 482,\n  \"variablesNames\": [\"MyDevice.CH1\", \"MyDevice.CH2\"],\n  \"variablesIds\": [\n    \"56b571010bac431e91cd7f5bd9abef7c\",\n    \"ca0c7878698e4885a09782f02516ab35\"\n  ]\n}\n```\n",
         "category": "DataService",
         "in": [
             {
-                "x": 100,
-                "y": 340,
+                "x": 44.999990463256836,
+                "y": 739.9999732971191,
                 "wires": [
                     {
-                        "id": "f64d0811e72a5d32"
+                        "id": "3cf37741633dd3cb"
                     }
                 ]
             }
         ],
         "out": [
             {
-                "x": 940,
-                "y": 580,
+                "x": 1040,
+                "y": 860,
                 "wires": [
                     {
-                        "id": "1e90d1846fd550eb",
+                        "id": "e31a8e9b37a738e9",
                         "port": 2
                     }
                 ]
@@ -46,76 +46,86 @@
                         ]
                     }
                 }
+            },
+            {
+                "name": "readIsRemote",
+                "type": "bool",
+                "value": "false",
+                "ui": {
+                    "label": {
+                        "en-US": "Is DataService installed on a different IED? (If True set URL, User and Password below)"
+                    },
+                    "type": "checkbox"
+                }
+            },
+            {
+                "name": "readRemoteURL",
+                "type": "str",
+                "value": "",
+                "ui": {
+                    "label": {
+                        "en-US": "Remote IED URL"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "readRemoteUser",
+                "type": "str",
+                "value": "",
+                "ui": {
+                    "label": {
+                        "en-US": "Remote IED User"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str",
+                            "env"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "readRemotePass",
+                "type": "cred",
+                "ui": {
+                    "label": {
+                        "en-US": "Remote IED Password"
+                    }
+                }
             }
         ],
         "meta": {
             "module": "DataServiceReadVariables",
-            "version": "0.0.2",
-            "desc": "Subflow that implements all the APIs needed to Read variables data from DataService Edge App",
+            "version": "0.0.3",
+            "desc": "Subflow that implements all the APIs needed to Read variables data from DataService Edge App version >= 1.4.0",
             "keywords": "dataservice, variables, read",
             "license": "MIT"
         },
         "color": "#A6BBCF",
         "icon": "node-red/leveldb.png",
         "status": {
-            "x": 1120,
-            "y": 520,
+            "x": 140,
+            "y": 60,
             "wires": [
                 {
-                    "id": "fc41b543821343df",
+                    "id": "9d89e63e5d6cfb0f",
                     "port": 0
-                },
-                {
-                    "id": "1e90d1846fd550eb",
-                    "port": 1
                 }
             ]
         }
     },
     {
-        "id": "abc5035a37790f6e",
-        "type": "function",
-        "z": "38742bb91ad9d5fc",
-        "name": "Create Token Request",
-        "func": "// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"POST\";\n\n//set url\nmsg.url = flow.get(\"dataserviceReadUrl\") + \"/TokenManagerService/oauth/token\";\n\n//set body\nmsg.payload = {\n    \"appName\": \"edgeappdataservice\",\n    \"appVersion\": \"1.1\",\n    \"hostTenant\": \"edge\",\n    \"userTenant\": \"edge\"\n    };\n        \n// set headers\nconst strJson = JSON.stringify(msg.payload);\nconst lenJson = Buffer.byteLength(strJson);\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['Content-Length'] = lenJson;\n\n// set auth header\nlet authStr = flow.get(\"dataserviceReadUser\") + \":\" + flow.get(\"dataserviceReadPass\");\nlet basicOut = Buffer.from(authStr).toString('base64');\nmsg.headers['X-SPACE-AUTH-KEY'] = 'Basic ' + basicOut;\n\nreturn msg;\n\n",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 560,
-        "y": 140,
-        "wires": [
-            [
-                "0d3fc59067917e1a"
-            ]
-        ]
-    },
-    {
-        "id": "0d3fc59067917e1a",
-        "type": "http request",
-        "z": "38742bb91ad9d5fc",
-        "name": "",
-        "method": "use",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "authType": "",
-        "x": 770,
-        "y": 140,
-        "wires": [
-            [
-                "df074c753dcd2565"
-            ]
-        ]
-    },
-    {
-        "id": "8e1c0ad053c512be",
+        "id": "41726bb23b9c6678",
         "type": "inject",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "At Start",
         "props": [
             {
@@ -132,127 +142,63 @@
         "onceDelay": 0.1,
         "topic": "",
         "payloadType": "date",
-        "x": 140,
-        "y": 80,
+        "x": 100,
+        "y": 220,
         "wires": [
             [
-                "3af489deced21476"
+                "01063d497886f837",
+                "0231123d43f9f84e"
             ]
         ]
     },
     {
-        "id": "df074c753dcd2565",
-        "type": "change",
-        "z": "38742bb91ad9d5fc",
-        "name": "set accessToken",
-        "rules": [
-            {
-                "t": "set",
-                "p": "readAccessToken",
-                "pt": "flow",
-                "to": "payload.access_token",
-                "tot": "msg"
-            }
-        ],
-        "action": "",
-        "property": "",
-        "from": "",
-        "to": "",
-        "reg": false,
-        "x": 990,
-        "y": 140,
-        "wires": [
-            [
-                "0bd4c145ad009f30"
-            ]
-        ]
-    },
-    {
-        "id": "c118ea59aee9d8b1",
+        "id": "ae903e683e45234b",
         "type": "function",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "Create Data Request",
-        "func": "// init msg\nlet outMsg = {\"headers\": {}};\n\n// set method\noutMsg.method = \"GET\";\n\n// get parameters for data query\n//from like '2021-10-10T10:00:00.000Z';\n//to like'2021-10-10T11:00:00.000Z';\nconst from = new Date(msg.from);\nconst to = new Date(msg.to);\n\n// set baseRoute\noutMsg.baseRoute = msg.baseRoute;\nlet route = msg.baseRoute + \"&from=\" + from.toISOString();\nroute += \"&to=\"   + to.toISOString();\nroute += \"&order=Ascending\";\n//set url\noutMsg.url = route;\n\n// set token header\noutMsg.headers[\"authorization\"] = flow.get(\"readAccessToken\");\n\n// set variablesmap in message\noutMsg.variablesNames = msg.variablesNames;\noutMsg.variablesIds = msg.variablesIds;\n\nif(msg.dataBuffer == \"\")\n{\n    flow.set(\"readStartTime\", new Date().getTime());\n    outMsg.dataBuffer = {};\n    \n    for(i = 0; i < msg.variablesIds.length; i++){\n        outMsg.dataBuffer[msg.variablesIds[i]]  = []; \n    }\n}\nelse\n{\n    outMsg.dataBuffer = msg.dataBuffer;\n}\n\n\nreturn outMsg;\n    \n",
-        "outputs": 1,
+        "func": "// init msg\nlet outMsg = {\"headers\": {}};\n\n// set method\noutMsg.method = \"GET\";\n\n// get parameters for data query\n//from like '2021-10-10T10:00:00.000Z';\n//to like'2021-10-10T11:00:00.000Z';\nconst from = new Date(msg.from);\nconst to = new Date(msg.to);\n\n// set baseRoute\noutMsg.baseRoute = msg.baseRoute;\nlet route = msg.baseRoute + \"&from=\" + from.toISOString();\nroute += \"&to=\"   + to.toISOString();\nroute += \"&order=Ascending\";\n//set url\noutMsg.url = route;\n\n// set variablesmap in message\noutMsg.variablesNames = msg.variablesNames;\noutMsg.variablesIds = msg.variablesIds;\n\nif(msg.dataBuffer == \"\")\n{\n    flow.set(\"readStartTime\", new Date().getTime());\n    outMsg.dataBuffer = {};\n    \n    for(i = 0; i < msg.variablesIds.length; i++){\n        outMsg.dataBuffer[msg.variablesIds[i]]  = []; \n    }\n}\nelse\n{\n    outMsg.dataBuffer = msg.dataBuffer;\n}\n\n// set the token if remote configuration is active\nlet IEDToken = flow.get(\"readIEDToken\");\nlet isRemote = env.get(\"readIsRemote\");\nif(isRemote)\n{\n    outMsg.headers[\"Cookie\"] = \"authToken=\" + IEDToken;\n    // send to https\n    node.send([null, outMsg]);\n}\nelse\n{\n    // send to http\n    node.send([outMsg, null]);\n}\n    \n",
+        "outputs": 2,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 640,
-        "y": 420,
+        "x": 780,
+        "y": 700,
         "wires": [
             [
-                "4cbbd503ba076bf1"
+                "9633c620bce38998"
+            ],
+            [
+                "9c82cca98ac52213"
             ]
         ]
     },
     {
-        "id": "4cbbd503ba076bf1",
-        "type": "http request",
-        "z": "38742bb91ad9d5fc",
-        "name": "",
-        "method": "use",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "authType": "",
-        "senderr": false,
-        "x": 830,
-        "y": 420,
-        "wires": [
-            [
-                "1e90d1846fd550eb"
-            ]
-        ]
-    },
-    {
-        "id": "601fc2a7dd9e12ca",
+        "id": "8fc3d0312a86a507",
         "type": "function",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "Create Var Request",
-        "func": "// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"GET\";\n\n//set url\nmsg.url = flow.get(\"dataserviceReadUrl\") + \"/DataService/Variables\";\n\n// set token header\nmsg.headers[\"authorization\"] = flow.get(\"readAccessToken\");\n\nreturn msg;\n\n",
-        "outputs": 1,
+        "func": "// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"GET\";\n\n//set url\nmsg.url = flow.get(\"dataserviceReadUrl\") + \"/DataService/Variables\";\n\n// set the token if remote configuration is active\nlet IEDToken = flow.get(\"readIEDToken\");\nlet isRemote = env.get(\"readIsRemote\");\nif(isRemote)\n{\n    msg.headers[\"Cookie\"] = \"authToken=\" + IEDToken;\n    // send to https\n    node.send([null, msg]);\n}\nelse\n{\n    // send to http\n    node.send([msg, null]);\n}\n",
+        "outputs": 2,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 570,
-        "y": 260,
+        "x": 630,
+        "y": 320,
         "wires": [
             [
-                "22d89b89cdc156cb"
+                "e90e553a8347dc32"
+            ],
+            [
+                "d49b288521e1f43c"
             ]
         ]
     },
     {
-        "id": "22d89b89cdc156cb",
-        "type": "http request",
-        "z": "38742bb91ad9d5fc",
-        "name": "",
-        "method": "use",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "authType": "",
-        "senderr": false,
-        "x": 770,
-        "y": 260,
-        "wires": [
-            [
-                "fc41b543821343df"
-            ]
-        ]
-    },
-    {
-        "id": "fc41b543821343df",
+        "id": "d6b2dea04eaafc5c",
         "type": "function",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "Set variablesMap",
         "func": "// create out message\nlet outMsg = {\"payload\": {\n      \"fill\": \"red\",\n      \"shape\": \"dot\",\n      \"text\": \"Connected but no variables configured.\"\n}};\n\n// get names of variables in input to be extracted from Data Service app\nlet varName = env.get(\"readVariablesNames\");\nlet varNameArray = varName.split(\",\");\n\n// get the assets map\nlet assetsMap = flow.get(\"readAssetsMap\");\n\n// init variables Map\nlet variablesMap = {};\n\n// iterate through variables in dataservice\nfor(let i = 0; i < msg.payload.variables.length; i++){\n    // create variable name as assetName.variableName\n    let varName = assetsMap[msg.payload.variables[i].assetId] + \".\" + msg.payload.variables[i].variableName;\n\n    // search for varName in input variables\n    if(varNameArray.indexOf(varName) != -1)\n    {\n        // set variables map as varName : varId\n        variablesMap[varName] = msg.payload.variables[i].variableId;\n    }\n}\n\n\nif (Object.keys(variablesMap).length > 0) {\n    flow.set(\"readVariablesMap\", variablesMap);\n    // set status\n    outMsg.payload = {\n      \"fill\": \"green\",\n      \"shape\": \"dot\",\n      \"text\": \"Connected and Configured for reading \" + Object.keys(variablesMap).length + \" variables.\"\n    };\n}\nelse\n{\n    flow.set(\"readVariablesMap\", null);\n}\n\n\nreturn outMsg;",
         "outputs": 1,
@@ -261,61 +207,17 @@
         "finalize": "",
         "libs": [],
         "x": 990,
-        "y": 260,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "0bd4c145ad009f30",
-        "type": "switch",
-        "z": "38742bb91ad9d5fc",
-        "name": "accessToken?",
-        "property": "readAccessToken",
-        "propertyType": "flow",
-        "rules": [
-            {
-                "t": "nnull"
-            }
-        ],
-        "checkall": "true",
-        "repair": false,
-        "outputs": 1,
-        "x": 320,
-        "y": 200,
+        "y": 320,
         "wires": [
             [
-                "2c94fc857dac2dd2"
+                "c979df9438ad2b21"
             ]
         ]
     },
     {
-        "id": "f64d0811e72a5d32",
+        "id": "bf78ddf47e51e797",
         "type": "switch",
-        "z": "38742bb91ad9d5fc",
-        "name": "accessToken?",
-        "property": "readAccessToken",
-        "propertyType": "flow",
-        "rules": [
-            {
-                "t": "nnull"
-            }
-        ],
-        "checkall": "true",
-        "repair": false,
-        "outputs": 1,
-        "x": 340,
-        "y": 340,
-        "wires": [
-            [
-                "f710f89cb930c459"
-            ]
-        ]
-    },
-    {
-        "id": "f710f89cb930c459",
-        "type": "switch",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "variablesMap?",
         "property": "readVariablesMap",
         "propertyType": "flow",
@@ -327,59 +229,18 @@
         "checkall": "true",
         "repair": false,
         "outputs": 1,
-        "x": 340,
-        "y": 380,
+        "x": 401.2499809265137,
+        "y": 747.4999732971191,
         "wires": [
             [
-                "6989400a31aef7a2"
+                "fc74032b6518bbd4"
             ]
         ]
     },
     {
-        "id": "ff7e0f820e489bec",
-        "type": "function",
-        "z": "38742bb91ad9d5fc",
-        "name": "Create User",
-        "func": "// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"POST\";\n\n//set url\nmsg.url = flow.get(\"dataserviceReadUrl\") + \"/TokenManagerService/users\";\n\nlet user = flow.get(\"dataserviceReadUser\");\nlet password = flow.get(\"dataserviceReadPass\");\n\n//set body\nmsg.payload = {\n      userName: user,\n      passWord: password,\n      familyName: \"myFamily\" + user,\n      givenName: user,\n      email: user + \"@myemail.com\",\n      roles: [\n        {\n          application: \"edgeappdataservice\",\n          role: \"admin\"\n        }]};\n        \n// set headers\nconst strJson = JSON.stringify(msg.payload);\nconst lenJson = Buffer.byteLength(strJson);\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['Content-Length'] = lenJson;\n\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 590,
-        "y": 80,
-        "wires": [
-            [
-                "dde55f9ad647d193"
-            ]
-        ]
-    },
-    {
-        "id": "dde55f9ad647d193",
-        "type": "http request",
-        "z": "38742bb91ad9d5fc",
-        "name": "",
-        "method": "use",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "authType": "",
-        "senderr": false,
-        "x": 770,
-        "y": 80,
-        "wires": [
-            [
-                "abc5035a37790f6e"
-            ]
-        ]
-    },
-    {
-        "id": "6989400a31aef7a2",
+        "id": "fc74032b6518bbd4",
         "type": "switch",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "dateFromPicked?",
         "property": "from",
         "propertyType": "msg",
@@ -391,18 +252,18 @@
         "checkall": "true",
         "repair": false,
         "outputs": 1,
-        "x": 330,
-        "y": 420,
+        "x": 391.2499809265137,
+        "y": 787.4999732971191,
         "wires": [
             [
-                "90de0f1e385ed490"
+                "2aeda755a6139696"
             ]
         ]
     },
     {
-        "id": "90de0f1e385ed490",
+        "id": "2aeda755a6139696",
         "type": "switch",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "dateToPicked?",
         "property": "to",
         "propertyType": "msg",
@@ -414,39 +275,25 @@
         "checkall": "true",
         "repair": false,
         "outputs": 1,
-        "x": 340,
-        "y": 460,
+        "x": 401.2499809265137,
+        "y": 827.4999732971191,
         "wires": [
             [
-                "0459b588c752ed44"
+                "8ba43b15fdde4a9d"
             ]
         ]
     },
     {
-        "id": "3af489deced21476",
+        "id": "2acbe6a307341038",
         "type": "change",
-        "z": "38742bb91ad9d5fc",
-        "name": "url, user, pass",
+        "z": "47c65435a62cd49d",
+        "name": "localURL",
         "rules": [
             {
                 "t": "set",
                 "p": "dataserviceReadUrl",
                 "pt": "flow",
                 "to": "http://edgeappdataservice:4203",
-                "tot": "str"
-            },
-            {
-                "t": "set",
-                "p": "dataserviceReadUser",
-                "pt": "flow",
-                "to": "nodeReadUser",
-                "tot": "str"
-            },
-            {
-                "t": "set",
-                "p": "dataserviceReadPass",
-                "pt": "flow",
-                "to": "nodeReadPass",
                 "tot": "str"
             }
         ],
@@ -455,38 +302,41 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 340,
-        "y": 80,
+        "x": 380,
+        "y": 240,
         "wires": [
             [
-                "ff7e0f820e489bec"
+                "ab49eee5e1121115"
             ]
         ]
     },
     {
-        "id": "2c94fc857dac2dd2",
+        "id": "ab49eee5e1121115",
         "type": "function",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "Create Asset Request",
-        "func": "// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"GET\";\n\n//set url\nmsg.url = flow.get(\"dataserviceReadUrl\") + \"/AssetService/Assets\";\n\n// set token header\nmsg.headers[\"authorization\"] = flow.get(\"readAccessToken\");\n\nreturn msg;\n\n",
-        "outputs": 1,
+        "func": "// init msg\nmsg = {\"headers\": {}};\n\n// set method\nmsg.method = \"GET\";\n\n//set url\nmsg.url = flow.get(\"dataserviceReadUrl\") + \"/AssetService/Assets\";\n\n// set the token if remote configuration is active\nlet IEDToken = flow.get(\"readIEDToken\");\nlet isRemote = env.get(\"readIsRemote\");\nif(isRemote)\n{\n    msg.headers[\"Cookie\"] = \"authToken=\" + IEDToken;\n    // send to https\n    node.send([null, msg]);\n}\nelse\n{\n    // send to http\n    node.send([msg, null]);\n}\n\n",
+        "outputs": 2,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 560,
+        "x": 580,
         "y": 200,
         "wires": [
             [
-                "963417999d6e9b8e"
+                "a9a78a2970ebec0c"
+            ],
+            [
+                "963a27dc3cb671c9"
             ]
         ]
     },
     {
-        "id": "963417999d6e9b8e",
+        "id": "a9a78a2970ebec0c",
         "type": "http request",
-        "z": "38742bb91ad9d5fc",
-        "name": "",
+        "z": "47c65435a62cd49d",
+        "name": "http",
         "method": "use",
         "ret": "obj",
         "paytoqs": "ignore",
@@ -495,18 +345,19 @@
         "persist": false,
         "proxy": "",
         "authType": "",
+        "senderr": false,
         "x": 770,
-        "y": 200,
+        "y": 180,
         "wires": [
             [
-                "b4e5f96e77ed5063"
+                "60f737c3c5ba7d1b"
             ]
         ]
     },
     {
-        "id": "b4e5f96e77ed5063",
+        "id": "60f737c3c5ba7d1b",
         "type": "function",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "Set assetsMap",
         "func": "// init assets list\nlet assetsMap = {};\n\nfor(i=0; i < msg.payload.assets.length; i++){\n    // for each asset set a key:value property as id:name\n    assetsMap[msg.payload.assets[i].assetId] = msg.payload.assets[i].name;\n}\n\n// set assets list as flow tag\nflow.set(\"readAssetsMap\", assetsMap);\n\n\nreturn msg;",
         "outputs": 1,
@@ -514,18 +365,18 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 980,
+        "x": 940,
         "y": 200,
         "wires": [
             [
-                "601fc2a7dd9e12ca"
+                "8fc3d0312a86a507"
             ]
         ]
     },
     {
-        "id": "0459b588c752ed44",
+        "id": "8ba43b15fdde4a9d",
         "type": "function",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "Init Request",
         "func": "\n\n// init variablesNames and Ids\nconst variablesMap = flow.get(\"readVariablesMap\");\nmsg.variablesNames = Object.keys(variablesMap);\nmsg.variablesIds = Object.values(variablesMap);\n\n// init databuffer\nmsg.dataBuffer = \"\";\n\n// init baseRoute\nmsg.baseRoute = flow.get(\"dataserviceReadUrl\") +\n                \"/DataService/Data?variableIds=[\\\"\" \n                + msg.variablesIds.join(\"\\\",\\\"\") + \"\\\"]\";\n\nreturn msg;",
         "outputs": 1,
@@ -533,18 +384,18 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 570,
-        "y": 340,
+        "x": 593.75,
+        "y": 827.4999504089355,
         "wires": [
             [
-                "c118ea59aee9d8b1"
+                "ae903e683e45234b"
             ]
         ]
     },
     {
-        "id": "1e90d1846fd550eb",
+        "id": "e31a8e9b37a738e9",
         "type": "function",
-        "z": "38742bb91ad9d5fc",
+        "z": "47c65435a62cd49d",
         "name": "Recursive Data Extraction",
         "func": "\n// loop over data received from dataservice\nfor(i=0; i<msg.payload.data.length; i++){\n    let varData = msg.payload.data[i];\n    // concatenate actual databuffer with new data \n    msg.dataBuffer[varData.variableId] = msg.dataBuffer[varData.variableId].concat(varData.values);\n}\n\n// check if some data are still to be queried\nif (msg.payload.hasOwnProperty(\"hasMoreData\")) {\n    // create out for next query\n    let out = {\n        \"baseRoute\": msg.baseRoute,\n        \"from\": msg.payload.hasMoreData.from,\n        \"to\": msg.payload.hasMoreData.to,\n        \"dataBuffer\": msg.dataBuffer,\n        \"variablesNames\": msg.variablesNames,\n        \"variablesIds\": msg.variablesIds\n    };\n    // create status message\n    let status = {\"payload\": {\n      \"fill\": \"green\",\n      \"shape\": \"dot\",\n      \"text\": \"Querying data in progress...\"\n    }};\n    \n    return [out, status, null];\n    \n}\nelse {\n    // change ids with names before sending databuffer \n    let newDataBuffer = {};\n    let numPoints = 0;\n    for(let i = 0; i < msg.variablesIds.length; i++)\n    {\n        newDataBuffer[msg.variablesNames[i]] = msg.dataBuffer[msg.variablesIds[i]];\n        numPoints += msg.dataBuffer[msg.variablesIds[i]].length\n    }\n    \n    // create final out\n    let out = {\n        \"payload\": newDataBuffer,\n        \"queryTime\": new Date().getTime() - flow.get(\"readStartTime\"),\n        \"variablesNames\": msg.variablesNames,\n        \"variablesIds\": msg.variablesIds\n    };\n    // create status message\n    let status = {\"payload\": {\n      \"fill\": \"green\",\n      \"shape\": \"dot\",\n      \"text\": new Date().toISOString() + \n                \"- Read \" + numPoints +\n                \" values from \" + msg.variablesIds.length +\n                \" variables in \" + out.queryTime/1000 + \"s.\"\n    }};\n\n    return [null, status, out]\n}",
         "outputs": 3,
@@ -552,15 +403,672 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 710,
-        "y": 520,
+        "x": 850,
+        "y": 800,
         "wires": [
             [
-                "c118ea59aee9d8b1"
+                "ae903e683e45234b"
+            ],
+            [
+                "2259a6443f3d96d5"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "01063d497886f837",
+        "type": "exec",
+        "z": "47c65435a62cd49d",
+        "command": "[ -d \"./dscerts\" ] ",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 200,
+        "y": 440,
+        "wires": [
+            [
+                "2d377ed4909e4b5a"
             ],
             [],
             []
         ]
+    },
+    {
+        "id": "5ebb08d62e5f0cd6",
+        "type": "function",
+        "z": "47c65435a62cd49d",
+        "name": "create cert command",
+        "func": "// get ip from previous command\nlet nodeIpAddress = flow.get(\"nodeIpAddress\");\n\n// init out message\nlet out = {};\n\n// create dir, create root cert, create csr for client cert, create client cert\nlet createCertCommand = 'openssl genrsa -out ./dscerts/rootCAkey.pem 4096';\n\ncreateCertCommand += ' && openssl req -new -sha512 -key ./dscerts/rootCAkey.pem';\ncreateCertCommand += ' -config ./dscerts/rootCA.conf -out ./dscerts/rootCA.csr';\n \ncreateCertCommand += ' && openssl x509 -req -days 9999 -sha512 -in ./dscerts/rootCA.csr';\ncreateCertCommand += ' -signkey ./dscerts/rootCAkey.pem -out ./dscerts/rootCA.pem';\n\ncreateCertCommand += ' && openssl genrsa -out ./dscerts/clientkey.pem 4096';\n\ncreateCertCommand += ' && openssl req -new -sha512 -key ./dscerts/clientkey.pem';\ncreateCertCommand += ' -config /data/dscerts/client.conf -out ./dscerts/client.csr';\n\ncreateCertCommand += ' && openssl x509 -req -in ./dscerts/client.csr';\ncreateCertCommand += ' -CA ./dscerts/rootCA.pem -CAkey ./dscerts/rootCAkey.pem';\ncreateCertCommand += ' -CAcreateserial -out ./dscerts/client.pem -days 9999 -sha512';\ncreateCertCommand += ' -extfile <(printf \"subjectAltName=IP:' + nodeIpAddress + '\")';\n\nout.payload = createCertCommand;\n\nreturn out;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 480,
+        "wires": [
+            [
+                "9cb7c21b7e4a146b"
+            ]
+        ]
+    },
+    {
+        "id": "0228bcb18e06bf31",
+        "type": "exec",
+        "z": "47c65435a62cd49d",
+        "command": "hostname -i",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 390,
+        "y": 500,
+        "wires": [
+            [
+                "c7c853873cbfbd44"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "2d377ed4909e4b5a",
+        "type": "switch",
+        "z": "47c65435a62cd49d",
+        "name": "rc code != 0",
+        "property": "rc.code",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "neq",
+                "v": "0",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 230,
+        "y": 500,
+        "wires": [
+            [
+                "0228bcb18e06bf31"
+            ]
+        ]
+    },
+    {
+        "id": "9cb7c21b7e4a146b",
+        "type": "exec",
+        "z": "47c65435a62cd49d",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 850,
+        "y": 540,
+        "wires": [
+            [
+                "fa02647aea2e5382"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "d0314570b193a9c9",
+        "type": "exec",
+        "z": "47c65435a62cd49d",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 690,
+        "y": 580,
+        "wires": [
+            [
+                "5ebb08d62e5f0cd6"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "c7c853873cbfbd44",
+        "type": "function",
+        "z": "47c65435a62cd49d",
+        "name": "create Conf",
+        "func": "// get ip from previous command\nlet nodeIpAddress = msg.payload.replace(/\\n/g, \"\");\nflow.set(\"nodeIpAddress\", nodeIpAddress);\n\n// init out\nlet out = {};\n\n// config file for rootCA certificate CSR\nlet CAcertConfText = '[req]\\n';\nCAcertConfText += 'distinguished_name = req_distinguished_name\\n';\nCAcertConfText += 'req_extensions = v3_req\\n';\nCAcertConfText += 'prompt = no\\n';\nCAcertConfText += '[req_distinguished_name]\\n';\nCAcertConfText += 'C = IT\\n';\nCAcertConfText += 'ST = IT\\n';\nCAcertConfText += 'L = Milan\\n';\nCAcertConfText += 'O = Siemens\\n';\nCAcertConfText += 'OU = DI FA SUP\\n';\nCAcertConfText += 'CN = IndustrialEdgeSelfSignedCA\\n';\nCAcertConfText += '[v3_req]\\n';\nCAcertConfText += 'keyUsage = keyEncipherment, dataEncipherment\\n';\nCAcertConfText += 'extendedKeyUsage = serverAuth\\n';\n\n// config file for client certificate CSR\nlet certConfText = '[req]\\n';\ncertConfText += 'distinguished_name = req_distinguished_name\\n';\ncertConfText += 'req_extensions = v3_req\\n';\ncertConfText += 'prompt = no\\n';\ncertConfText += '[req_distinguished_name]\\n';\ncertConfText += 'C = IT\\n';\ncertConfText += 'ST = IT\\n';\ncertConfText += 'L = Milan\\n';\ncertConfText += 'O = Siemens\\n';\ncertConfText += 'OU = DI FA SUP\\n';\ncertConfText += 'CN = dataserviceNodeRed\\n';\ncertConfText += '[v3_req]\\n';\ncertConfText += 'keyUsage = keyEncipherment, dataEncipherment\\n';\ncertConfText += 'extendedKeyUsage = serverAuth\\n';\ncertConfText += 'subjectAltName = @alt_names\\n';\ncertConfText += '[alt_names]\\n';\ncertConfText += 'IP = ' + nodeIpAddress + '\\n';\n\n// create cert folder and CSR conf files\nout.payload = 'mkdir -p ./dscerts';\nout.payload += ' && echo \"' + CAcertConfText + '\" > ./dscerts/rootCA.conf';\nout.payload += ' && echo \"' + certConfText + '\" > ./dscerts/client.conf';\n\nreturn out;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 540,
+        "wires": [
+            [
+                "d0314570b193a9c9"
+            ]
+        ]
+    },
+    {
+        "id": "6b76fa3b9042a1a8",
+        "type": "comment",
+        "z": "47c65435a62cd49d",
+        "name": "search for cert folder",
+        "info": "",
+        "x": 238.74998474121094,
+        "y": 387.4999408721924,
+        "wires": []
+    },
+    {
+        "id": "ecf0a90a21b59194",
+        "type": "comment",
+        "z": "47c65435a62cd49d",
+        "name": "get ip of container",
+        "info": "",
+        "x": 449.99998474121094,
+        "y": 446.2499656677246,
+        "wires": []
+    },
+    {
+        "id": "b0d70e4b395cd193",
+        "type": "comment",
+        "z": "47c65435a62cd49d",
+        "name": "generate rootCA and client certs config",
+        "info": "",
+        "x": 465.00001525878906,
+        "y": 591.2499828338623,
+        "wires": []
+    },
+    {
+        "id": "561819ded0c8b6ef",
+        "type": "comment",
+        "z": "47c65435a62cd49d",
+        "name": "generate rootCA and client certs",
+        "info": "",
+        "x": 750,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "0231123d43f9f84e",
+        "type": "switch",
+        "z": "47c65435a62cd49d",
+        "name": "isRemoteIED?",
+        "property": "readIsRemote",
+        "propertyType": "env",
+        "rules": [
+            {
+                "t": "true"
+            },
+            {
+                "t": "false"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 260,
+        "y": 180,
+        "wires": [
+            [
+                "c29ebb0c3ca6ceed"
+            ],
+            [
+                "2acbe6a307341038"
+            ]
+        ]
+    },
+    {
+        "id": "c29ebb0c3ca6ceed",
+        "type": "function",
+        "z": "47c65435a62cd49d",
+        "name": "Get Remote IED Login Token",
+        "func": "// get remote URL,user and password from node configuration\nlet remoteURL = env.get(\"readRemoteURL\");\nlet remoteUser = env.get(\"readRemoteUser\");\nlet remotePass = env.get(\"readRemotePass\");\n\n// check validity of configuration properties\nif (remoteURL != \"\" && remoteUser != \"\" && remotePass != \"\")\n{\n    // init http request msg\n    let outMsg = {\"headers\": {}};\n    // set method\n    outMsg.method = \"POST\";\n    //set url\n    outMsg.url = \"https://\" + remoteURL + \"/device/edge/api/v1/login/direct\";\n    //set body\n    outMsg.payload = {\n      \"username\": remoteUser,\n      \"password\": remotePass\n    };\n    // set headers\n    const strJson = JSON.stringify(outMsg.payload);\n    const lenJson = Buffer.byteLength(strJson);\n    outMsg.headers['Content-Type'] = 'application/json';\n    \n    node.send([outMsg, null]);\n}\nelse\n{\n    // create status error message\n    let statusMsg = {\"payload\": {\n        \"fill\": \"red\",\n        \"shape\": \"dot\",\n        \"text\": \"Could not login to Remote IED: Missing configuration.\"\n    }};\n    \n    // reset IED token to null\n    flow.set(\"readIEDToken\", null);\n    \n    node.send([null, statusMsg]);\n}\n\n",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 120,
+        "wires": [
+            [
+                "1982e9b0f4246ab7"
+            ],
+            [
+                "6b04332a2dd7fea8"
+            ]
+        ]
+    },
+    {
+        "id": "1982e9b0f4246ab7",
+        "type": "http request",
+        "z": "47c65435a62cd49d",
+        "name": "https",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "aa74a00a8f723d14",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 590,
+        "y": 80,
+        "wires": [
+            [
+                "c40e93a55213105c"
+            ]
+        ]
+    },
+    {
+        "id": "6b04332a2dd7fea8",
+        "type": "link out",
+        "z": "47c65435a62cd49d",
+        "name": "Parameter Login Remote IED",
+        "mode": "link",
+        "links": [
+            "9d89e63e5d6cfb0f"
+        ],
+        "x": 555,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "8ee12d014cc772b3",
+        "type": "change",
+        "z": "47c65435a62cd49d",
+        "name": "remoteURL",
+        "rules": [
+            {
+                "t": "set",
+                "p": "dataserviceReadUrl",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 770,
+        "y": 120,
+        "wires": [
+            [
+                "ab49eee5e1121115"
+            ]
+        ]
+    },
+    {
+        "id": "c40e93a55213105c",
+        "type": "function",
+        "z": "47c65435a62cd49d",
+        "name": "Set URL and IED Token with refresh",
+        "func": "\n//check response\nif(msg.statusCode == 200)\n{\n    // set IED token to flow variable\n    flow.set(\"readIEDToken\", msg.payload.data.access_token);\n    \n    // get the ms for next token refresh\n    let refreshTokenTime = msg.payload.data.expires_in\n        - new Date().getTime()\n        - (3600 * 6 * 1000);\n    // send refresh token trigger after calculated ms\n    setTimeout(function() {\n        node.send([{}, null, null]);\n        }, refreshTokenTime);\n        \n    // get remote URL from node configuration\n    let remoteURL = env.get(\"readRemoteURL\");\n    // create and send dataservice remote URL\n    let remoteDataserviceURL = \"https://\" + remoteURL + \"/dataservice\";\n    node.send([null, null, {\"payload\": remoteDataserviceURL}]);\n}\nelse\n{\n    // create status error message\n    let statusMsg = {\"payload\": {\n        \"fill\": \"red\",\n        \"shape\": \"dot\",\n        \"text\": \"Could not login to Remote IED: \" + msg.payload.errors[0].message\n    }};\n    \n    // reset IED token to null\n    flow.set(\"readIEDToken\", null);\n    \n    node.send([null, statusMsg, null]);    \n}\n",
+        "outputs": 3,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 810,
+        "y": 40,
+        "wires": [
+            [
+                "73128b5cbee7b2ad"
+            ],
+            [
+                "f67f90feda23462c"
+            ],
+            [
+                "8ee12d014cc772b3"
+            ]
+        ]
+    },
+    {
+        "id": "3cf37741633dd3cb",
+        "type": "switch",
+        "z": "47c65435a62cd49d",
+        "name": "isRemoteIED?",
+        "property": "readIsRemote",
+        "propertyType": "env",
+        "rules": [
+            {
+                "t": "true"
+            },
+            {
+                "t": "false"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 180,
+        "y": 740,
+        "wires": [
+            [
+                "b4ef46d44e0af1f8"
+            ],
+            [
+                "bf78ddf47e51e797"
+            ]
+        ]
+    },
+    {
+        "id": "b4ef46d44e0af1f8",
+        "type": "switch",
+        "z": "47c65435a62cd49d",
+        "name": "IEDToken?",
+        "property": "readIEDToken",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 1,
+        "x": 350,
+        "y": 680,
+        "wires": [
+            [
+                "bf78ddf47e51e797"
+            ]
+        ]
+    },
+    {
+        "id": "f67f90feda23462c",
+        "type": "link out",
+        "z": "47c65435a62cd49d",
+        "name": "Status Login Remote IED",
+        "mode": "link",
+        "links": [
+            "9d89e63e5d6cfb0f"
+        ],
+        "x": 1055,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "9d89e63e5d6cfb0f",
+        "type": "link in",
+        "z": "47c65435a62cd49d",
+        "name": "Status Output",
+        "links": [
+            "2259a6443f3d96d5",
+            "c979df9438ad2b21",
+            "6b04332a2dd7fea8",
+            "f67f90feda23462c"
+        ],
+        "x": 55,
+        "y": 60,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "963a27dc3cb671c9",
+        "type": "http request",
+        "z": "47c65435a62cd49d",
+        "name": "https",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "aa74a00a8f723d14",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 770,
+        "y": 220,
+        "wires": [
+            [
+                "60f737c3c5ba7d1b"
+            ]
+        ]
+    },
+    {
+        "id": "e90e553a8347dc32",
+        "type": "http request",
+        "z": "47c65435a62cd49d",
+        "name": "http",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 810,
+        "y": 300,
+        "wires": [
+            [
+                "d6b2dea04eaafc5c"
+            ]
+        ]
+    },
+    {
+        "id": "d49b288521e1f43c",
+        "type": "http request",
+        "z": "47c65435a62cd49d",
+        "name": "https",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "aa74a00a8f723d14",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 810,
+        "y": 340,
+        "wires": [
+            [
+                "d6b2dea04eaafc5c"
+            ]
+        ]
+    },
+    {
+        "id": "2259a6443f3d96d5",
+        "type": "link out",
+        "z": "47c65435a62cd49d",
+        "name": "Data Extraction Status",
+        "mode": "link",
+        "links": [
+            "9d89e63e5d6cfb0f"
+        ],
+        "x": 1035,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "c979df9438ad2b21",
+        "type": "link out",
+        "z": "47c65435a62cd49d",
+        "name": "Variables Map Status",
+        "mode": "link",
+        "links": [
+            "9d89e63e5d6cfb0f"
+        ],
+        "x": 1135,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "620b876656721be6",
+        "type": "comment",
+        "z": "47c65435a62cd49d",
+        "name": "login to remote IED URL and get token",
+        "info": "",
+        "x": 430,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "31fb5662400e9328",
+        "type": "comment",
+        "z": "47c65435a62cd49d",
+        "name": "connect directly to local IED Dataservice",
+        "info": "",
+        "x": 337.49998474121094,
+        "y": 281.24997901916504,
+        "wires": []
+    },
+    {
+        "id": "02cbfd0b044416aa",
+        "type": "comment",
+        "z": "47c65435a62cd49d",
+        "name": "map assets and variables",
+        "info": "",
+        "x": 1054.9999237060547,
+        "y": 268.7499771118164,
+        "wires": []
+    },
+    {
+        "id": "96d995f566ad381b",
+        "type": "comment",
+        "z": "47c65435a62cd49d",
+        "name": "check conditions",
+        "info": "",
+        "x": 180,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "9633c620bce38998",
+        "type": "http request",
+        "z": "47c65435a62cd49d",
+        "name": "http",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 970,
+        "y": 680,
+        "wires": [
+            [
+                "e31a8e9b37a738e9"
+            ]
+        ]
+    },
+    {
+        "id": "9c82cca98ac52213",
+        "type": "http request",
+        "z": "47c65435a62cd49d",
+        "name": "https",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "aa74a00a8f723d14",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 970,
+        "y": 720,
+        "wires": [
+            [
+                "e31a8e9b37a738e9"
+            ]
+        ]
+    },
+    {
+        "id": "4073805feb1077ee",
+        "type": "comment",
+        "z": "47c65435a62cd49d",
+        "name": "get data recursevely",
+        "info": "",
+        "x": 790,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "fa02647aea2e5382",
+        "type": "link out",
+        "z": "47c65435a62cd49d",
+        "name": "Certs out",
+        "mode": "link",
+        "links": [
+            "7eff9c0247ed5cfb"
+        ],
+        "x": 955,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "7eff9c0247ed5cfb",
+        "type": "link in",
+        "z": "47c65435a62cd49d",
+        "name": "Remote IED Token",
+        "links": [
+            "73128b5cbee7b2ad",
+            "fa02647aea2e5382"
+        ],
+        "x": 215,
+        "y": 120,
+        "wires": [
+            [
+                "c29ebb0c3ca6ceed"
+            ]
+        ]
+    },
+    {
+        "id": "73128b5cbee7b2ad",
+        "type": "link out",
+        "z": "47c65435a62cd49d",
+        "name": "Token Refresh Output",
+        "mode": "link",
+        "links": [
+            "7eff9c0247ed5cfb"
+        ],
+        "x": 1055,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "aa74a00a8f723d14",
+        "type": "tls-config",
+        "z": "47c65435a62cd49d",
+        "name": "DataServiceTLS",
+        "cert": "./dscerts/client.pem",
+        "key": "./dscerts/clientkey.pem",
+        "ca": "./dscerts/rootCA.pem",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "servername": "",
+        "verifyservercert": false,
+        "alpnprotocol": ""
     },
     {
         "id": "ba048851b7230de7",
@@ -628,7 +1136,7 @@
         "y": 320,
         "wires": [
             [
-                "e1816a5c63eb59f3"
+                "1d519e36932386fe"
             ]
         ]
     },
@@ -1064,7 +1572,7 @@
         "type": "debug",
         "z": "ba048851b7230de7",
         "name": "",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1075,28 +1583,6 @@
         "x": 770,
         "y": 440,
         "wires": []
-    },
-    {
-        "id": "e1816a5c63eb59f3",
-        "type": "subflow:38742bb91ad9d5fc",
-        "z": "ba048851b7230de7",
-        "name": "",
-        "env": [
-            {
-                "name": "readVariablesNames",
-                "value": "Production.Production.GoodPieces,Production.Production.BadPieces,Production.Production.MachSpeedSeconds",
-                "type": "str"
-            }
-        ],
-        "x": 610,
-        "y": 320,
-        "wires": [
-            [
-                "8363d43c1dbbd0c7",
-                "589e9323d1d7e28d",
-                "a365e171cbe733ca"
-            ]
-        ]
     },
     {
         "id": "cbf17c7b27d629f2",
@@ -1131,6 +1617,31 @@
         "x": 1230,
         "y": 440,
         "wires": []
+    },
+    {
+        "id": "1d519e36932386fe",
+        "type": "subflow:47c65435a62cd49d",
+        "z": "ba048851b7230de7",
+        "name": "",
+        "env": [
+            {
+                "name": "readVariablesNames",
+                "value": "Production.Production.GoodPieces,Production.Production.BadPieces,Production.Production.MachSpeedSeconds",
+                "type": "str"
+            },
+            {
+                "name": "readRemotePass",
+                "type": "cred"
+            }
+        ],
+        "x": 610,
+        "y": 320,
+        "wires": [
+            [
+                "589e9323d1d7e28d",
+                "8363d43c1dbbd0c7"
+            ]
+        ]
     },
     {
         "id": "918d230342c74806",

@@ -13,7 +13,7 @@ Using the Data Service Development Kit app you can develop your own apps based o
   - [Documentation](#documentation)
   - [Application Example](#application-example)
   - [Contribution](#contribution)
-  - [Licence and Legal Information](#licence-and-legal-information)
+  - [License and Legal Information](#license-and-legal-information)
 
 ## Description
 
@@ -80,15 +80,20 @@ You can find the further information about the following steps in the [docs](./d
 
 Some examples on how to extract data from Data Service application using the available API calls is provided in the [examples](./examples):
 
-- [Production data extraction and visualization in NodeRED](./examples/Production_data_example.md#description)
-- [Read Write Subflows Example](./examples/Read_Write_Subflows_Example.md)
+1. _Read and Write Nodes for DataService_
 
-The guide above explains how to extract data from a PLC data source, save data into the Data Service database and retrieve them using NodeRED, with the aim of saving the values of the collected data points into a CSV file or exploiting them in other applications for specific purposes.
+   - [Read Write Subflows Example](./examples/Read_Write_Subflows_Example.md)
+   - For **DataService Edge Apps with version < 1.4.0** you need to use the deprecated nodes for V1.3: [Read Write Subflows Example for V1.3](./examples/Read_Write_Subflows_V1.3_Example.md)
+
+2. _Production data extraction and visualization in NodeRED_
+
+   - [Production data extraction and visualization in NodeRED](./examples/Production_data_example.md#description)
+   The guide above explains how to extract data from a PLC data source, save data into the **Data Service version >= 1.4.0** database and retrieve them using NodeRED, with the aim of saving the values of the collected data points into a CSV file or exploiting them in other applications for specific purposes.
 
 ## Contribution
 
 Thanks for your interest in contributing. Anybody is free to report bugs, unclear documentation, and other problems regarding this repository in the Issues section or, even better, is free to propose any changes to this repository using Merge Requests.
 
-## Licence and Legal Information
+## License and Legal Information
 
 Please read the [Legal information](LICENSE.md).

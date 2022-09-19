@@ -1,16 +1,15 @@
-# Application Example - Read and Write Data with Subflows Nodes
+# Application Example - Read and Write Data with Subflows Nodes from DataService Edge App <= v.1.3
 
-- [Application Example - Read and Write Data with Subflows Nodes](#application-example---read-and-write-data-with-subflows-nodes)
+- [Application Example - Read and Write Data with Subflows Nodes from DataService Edge App <= v.1.3](#application-example---read-and-write-data-with-subflows-nodes-from-dataservice-edge-app--v13)
   - [Description](#description)
   - [Requirements](#requirements)
   - [Usage](#usage)
     - [Import Subflows](#import-subflows)
-    - [DataService Write Subflow Node](#dataservice-write-subflow-node)
-    - [DataService Read Subflow Node](#dataservice-read-subflow-node)
+    - [DataService Write V1.3 Subflow Node](#dataservice-write-v13-subflow-node)
+    - [DataService Read V1.3 Subflow Node](#dataservice-read-v13-subflow-node)
     - [Example Flow](#example-flow)
-      - [Import Example Flow](#import-example-flow)
       - [Create Custom Adapter and a Custom Asset in DataService](#create-custom-adapter-and-a-custom-asset-in-dataservice)
-      - [Write Data to an Asset with DataService Write Subflow](#write-data-to-an-asset-with-dataservice-write-subflow)
+      - [Write Data to an Asset with DataService Write V1.3 Subflow](#write-data-to-an-asset-with-dataservice-write-v13-subflow)
       - [Read Data from an Asset with DataService Read Subflow](#read-data-from-an-asset-with-dataservice-read-subflow)
   - [Documentation](#documentation)
   - [Contribution](#contribution)
@@ -18,48 +17,38 @@
 
 ## Description
 
-In this Application Example two custom **subflow nodes** are used to **read** and **write** data points for multiple variables from and to DataService Edge App.
+In this Application Example two custom **subflow nodes** are used to **read** and **write** data points for multiple variables from and to DataService Edge App with version <= 1.3.
 
-Those nodes simplify the interaction with the DataService Edge App and implements all the APIs required for read and write operation.
+Those nodes simplify the interaction with the DataService Edge App version <= 1.3 and implements all the APIs required for read and write operation.
 
-To use the **DataService Subflows** Go to [Requirements](#requirements) section to check all the needed information, then [Import DataService Subflows](#import-subflows) in your Flow Creator / NodeRED instance. If you want to test the nodes, follow the [Example Flow](#example-flow) together with imported subflows where two variables belonging to one asset are read and written.
+To use the **DataService V1.3 Subflows** Go to [Requirements](#requirements) section to check all the needed information, then [Import DataService Subflows](#import-subflows) in your Flow Creator / NodeRED instance. If you want to test the nodes, follow the [Example Flow](#example-flow) together with imported subflows where two variables belonging to one asset are read and written.
 
-![rw_sub_nodered_flow.png](graphics/rw_sub_nodered_flow.png)
+![rw13_sub_nodered_flow.png](graphics/rw13_sub_nodered_flow.png)
 
 ## Requirements
 
-- Industrial Edge Device (IED) with firmware V1.7.0-18
+- Industrial Edge Device (IED) with firmware >= V1.7.0-18
 - **Flow Creator** Edge App or **NodeRED** App installed on IED to run the example flow with read and write subflows
-- **DataService** Edge App with **version >= 1.4.0** installed on IED to write and read data in a asset
-- Subflow nodes **DataService Read** and **DataService Write** that can be imported standalone with the flow file [Read_Write_Subflows_Only_Nodes.json](Read_Write_Subflows_Only_Nodes.json) or with the example flow file [Read_Write_Subflows_Example.json](Read_Write_Subflows_Example.json)
+- **DataService** Edge App **version <= v1.3** installed on IED to write and read data in a asset
+- Subflows nodes **DataService Read V1.3** and **DataService Write V1.3** that can be imported with the example flow file [Read_Write_Subflows_V1.3_Example.json](Read_Write_Subflows_V1.3_Example.json)
 
 ## Usage
 
 ### Import Subflows
 
-- Download or copy the example flow file [Read_Write_Subflows_Only_Nodes.json](Read_Write_Subflows_Only_Nodes.json)
+- Download or copy the example flow file [Read_Write_Subflows_V1.3_Example.json](Read_Write_Subflows_V1.3_Example.json)
 - Open your Flow Creator / NodeRED instance
 - Go to Menu in the upper right corner
-- Press Import and browse or paste the example flow file [Read_Write_Subflows_Only_Nodes.json](Read_Write_Subflows_Only_Nodes.json)
-- The subflows nodes **DataService Read** and **DataService Write** are showed up in your actual flow and also in the **"DataService"** category of Node Palette left tab:
+- Press Import and browse or paste the example flow file [Read_Write_Subflows_V1.3_Example.json](Read_Write_Subflows_V1.3_Example.json)
+- The example flow is showed up and in the **"DataService"** category of Node Palette you will find both **DataService Read V1.3** and **DataService Write V1.3** nodes:
 
-![rw_sub_nodered_nodes_and_palette.png](./graphics/rw_sub_nodered_nodes_and_palette.png)
+![rw13_sub_nodered_flow_and_palette.png](./graphics/rw13_sub_nodered_flow_and_palette.png)
 
-Is possible to import the subflows nodes **DataService Read** and **DataService Write** also by importing the Example Flow file [Read_Write_Subflows_Example.json](Read_Write_Subflows_Example.json) as mentioned in the section [Import Example Flow](#import-example-flow) below.
+### DataService Write V1.3 Subflow Node
 
-### DataService Write Subflow Node
+Subflow that implements all the APIs needed to Write variables data to DataService Edge App **version <= v1.3**.
 
-Subflow that implements all the APIs needed to Write variables data to **DataService Edge App version >= 1.4.0**.
-
-![rw_sub_nodered_flow_write.png](./graphics/rw_sub_nodered_flow_write.png)
-
-**Configuration:**
-
-By checking the **Remote IED checkbox** is it possible to configure the address of the IED that runs **DataService version >= 1.4.0** to be connected.
-For connecting to a remote DataService instance, the **login credentials** of the IED to be connect are also needed.
-If the checkbox is **empty** the subflow will try to connect to the local DataService App running on the same IED that runs this node.
-
-![rw_sub_nodered_subflow_write_config.png](./graphics/rw_sub_nodered_subflow_write_config.png)
+![rw13_sub_nodered_flow_write.png](./graphics/rw13_sub_nodered_flow_write.png)
 
 **Input Message:**
 
@@ -122,22 +111,18 @@ The node will return a message with the following properties:
 }
 ```
 
-### DataService Read Subflow Node
+### DataService Read V1.3 Subflow Node
 
-Subflow that implements all the APIs needed to read variables data from **DataService Edge App version >= 1.4.0** based on their **names**, a **from date** and a **to date**.
+Subflow that implements all the APIs needed to read variables data from DataService Edge App **version <= v1.3** based on their **names**, a **from date** and a **to date**.
 
-![rw_sub_nodered_flow_read.png](./graphics/rw_sub_nodered_flow_read.png)
+![rw13_sub_nodered_flow_read.png](./graphics/rw13_sub_nodered_flow_read.png)
 
 **Configuration:**
 
 Configure the variables names to be read in the property **Variables Names** of the node in the format `asset_name.variable_name` separated by commas (no spaces between names and commas, e.g. `MyDevice.CH1,MyDevice.CH2`).
 For example, to read a variable called **CH1** from the Asset **MyDevice** use **MyDevice.CH1**.
 
-By checking the **Remote IED checkbox** is it possible to configure the address of the IED that runs **DataService version >= 1.4.0** to be connected.
-For connecting to a remote DataService instance, the **login credentials** of the IED to be connect are also needed.
-If the checkbox is **empty** the subflow will try to connect to the local DataService App running on the same IED that runs this node.
-
-![rw_sub_nodered_subflow_read_config.png](./graphics/rw_sub_nodered_subflow_read_config.png)
+![rw13_sub_nodered_subflow_read_config.png](./graphics/rw13_sub_nodered_subflow_read_config.png)
 
 **Input Message:**
 
@@ -203,28 +188,18 @@ The node will return a message with the following properties:
 
 ### Example Flow
 
-In the example flow file [Read_Write_Subflows_Example.json](Read_Write_Subflows_Example.json) different tasks are achieved:
+In the example flow file [Read_Write_Subflows_V1.3_Example.json](Read_Write_Subflows_V1.3_Example.json) different tasks are achieved:
 
 - Create metadata for a **custom Asset** on a custom Adapter with MQTT
-- Write a batch of values to two variables with **DataService Read** node in the created custom Asset
-- Read the written variables in the custom asset with **DataService Read** node
-
-#### Import Example Flow
-
-- Download or copy the example flow file [Read_Write_Subflows_Example.json](Read_Write_Subflows_Example.json)
-- Open your Flow Creator / NodeRED instance
-- Go to Menu in the upper right corner
-- Press Import and browse or paste the example flow file [Read_Write_Subflows_Example.json](Read_Write_Subflows_Example.json)
-- The example flow is showed up in the editor and in the **"DataService"** category of Node Palette you will find both **DataService Read** and **DataService Write** nodes:
-
-![rw_sub_nodered_flow_and_palette.png](./graphics/rw_sub_nodered_flow_and_palette.png)
+- Write a batch of values to two variables with **DataService Read V1.3** node in the created custom Asset
+- Read the written variables in the custom asset with **DataService Read V1.3** node
 
 #### Create Custom Adapter and a Custom Asset in DataService
 
 In the example flow the first part is dedicated to metadata creation for the asset `MyDevice` and the two variables `CH1` and `CH2` belonging to it.
 The variables `CH1` and `CH2` will receive data from a custom **Adapter** called `MyAdapter`.
 
-![rw_sub_nodered_flow_metadata.png](./graphics/rw_sub_nodered_flow_metadata.png)
+![rw13_sub_nodered_flow_metadata.png](./graphics/rw13_sub_nodered_flow_metadata.png)
 
 A function node will send a MQTT message through **IE Databus** with the metadata structure for a custom adapter `MyAdapter` to the metadata topic `ie/m/myadapter/dp` that will be used in the adapter configuration.
 
@@ -266,23 +241,23 @@ msg.payload = {
 };
 ```
 
-The adapter `MyAdapter` must be created within the **DataService** App before sending metadata with the flow in the example as below:
+The adapter `MyAdapter` must be created within the **DataService** App version <= v1.3 before sending metadata with the flow in the example as below:
 
-![rw_sub_dataservice_adapter_custom.png](graphics/rw_sub_dataservice_adapter_custom.png)
+![rw13_sub_dataservice_adapter_custom.png](graphics/rw13_sub_dataservice_adapter_custom.png)
 
 After creating adapter, press **Inject** button on the first part of the example flow to send metadata and set the configuration for the adapter `MyAdapter`.
 
-Then is it possible to create the asset named `MyDevice` with two variables `CH1` and `CH2` within the **DataService** App:
+Then is it possible to create the asset named `MyDevice` with two variables `CH1` and `CH2` within the **DataService** App version <= v1.3:
 
-![rw_sub_dataservice_asset_custom.png](graphics/rw_sub_dataservice_asset_custom.png)
+![rw13_sub_dataservice_asset_custom.png](graphics/rw13_sub_dataservice_asset_custom.png)
 
-#### Write Data to an Asset with DataService Write Subflow
+#### Write Data to an Asset with DataService Write V1.3 Subflow
 
-The second part of the example flow is dedicated to **write** to DataService App a **simulated batch** of 10800 points for each variable, where each point is spaced 1 second apart the others. This means that the data points batch will have a range of **3 hours** from the moment when the inject button is pressed (10800 sec = 3h).
+The second part of the example flow is dedicated to **write** to DataService App version <= v1.3 a **simulated batch** of 10800 points for each variable, where each point is spaced 1 second apart the others. This means that the data points batch will have a range of **3 hours** from the moment when the inject button is pressed (10800 sec = 3h).
 
-![rw_sub_nodered_flow_write.png](./graphics/rw_sub_nodered_flow_write.png)
+![rw13_sub_nodered_flow_write.png](./graphics/rw13_sub_nodered_flow_write.png)
 
-When the **function** node is triggered, the batch of data is created as input message for the **DataService Write** node as specified in the section [DataService Write Subflow Node](#dataservice-read-subflow-node) above.
+When the **function** node is triggered, the batch of data is created as input message for the **DataService Write V1.3** node as specified in the section [DataService Write V1.3 Subflow Node](#dataservice-write-v13-subflow-node) above.
 Below the code of the function block where the **variables names** to be written are specified within the array `varNames` and the number of simulated data points for each variable is set with the function variable `tagsNum`:
 
 ```js
@@ -328,17 +303,17 @@ for (let i = 0; i < varNames.length; i++) {
 return msg;
 ```
 
-When the **DataService Write** node is triggered from the batch of simulated data, it will write all the points to the specified **asset** and then output a message that will contains the write status and information. See output example in the section [DataService Read Subflow Node](#dataservice-read-subflow-node) above.
+When the **DataService Write V1.3** node is triggered from the batch of simulated data, it will write all the points to the specified **asset** and then output a message that will contains the write status and information. See output example in the section [DataService Read V1.3 Subflow Node](#dataservice-read-v13-subflow-node) above.
 
 #### Read Data from an Asset with DataService Read Subflow
 
-The last part of the example flow shows how to **read variables** data points from DataService App, in a specified time range, using the **DataService Read** Subflow Node.
+The last part of the example flow shows how to **read variables** data points from DataService App, in a specified time range, using the **DataService Read V1.3** Subflow Node.
 
-![rw_sub_nodered_flow_read.png](./graphics/rw_sub_nodered_flow_read.png)
+![rw13_sub_nodered_flow_read.png](./graphics/rw13_sub_nodered_flow_read.png)
 
-The **DataService Read** node is configured to read the variables `MyDevice.CH1` and `MyDevice.CH2` in the property **Variables Names** of the node as specified in the section [DataService Read Subflow Node](#dataservice-read-subflow-node) above.
+The **DataService Read V1.3** node is configured to read the variables `MyDevice.CH1` and `MyDevice.CH2` in the property **Variables Names** of the node as specified in the section [DataService Read V1.3 Subflow Node](#dataservice-read-v13-subflow-node) above.
 
-When the **function** node is triggered, the time range properties `from` and `to` are created as input message for the **DataService Read** node, as specified in the section [DataService Read Subflow Node](#dataservice-read-subflow-node) above.
+When the **function** node is triggered, the time range properties `from` and `to` are created as input message for the **DataService Read V1.3** node, as specified in the section [DataService Read V1.3 Subflow Node](#dataservice-read-v13-subflow-node) above.
 
 Below the code of the function block where a **3 hours time range** is set by specifying the `to` property as now and the `from` property as 3 ours ago:
 
@@ -353,7 +328,7 @@ msg.from = new Date(d.getTime() - 3 * 3600 * 1000).toISOString();
 return msg;
 ```
 
-When the **DataService Read** node is triggered, the received **output message** will contains all the data points belonging to the configured variables in the specified time range. See output example in the section [DataService Read Subflow Node](#dataservice-read-subflow-node) above.
+When the **DataService Read V1.3** node is triggered, the received **output message** will contains all the data points belonging to the configured variables in the specified time range. See output example in the section [DataService Read V1.3 Subflow Node](#dataservice-read-v13-subflow-node) above.
 
 ## Documentation
 

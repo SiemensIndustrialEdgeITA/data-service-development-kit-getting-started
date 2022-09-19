@@ -17,11 +17,11 @@ This example is intended to show you how to extract data from Data Service datab
 
 To do this, you will create some tags in the Data Service application and then exploit API calls to visualize the tags via NodeRED application.
 
-For more information regarding Data Service APIs, please check [Access Data via Browser](#access-data-via-browser) documentation in [docs](./docs).
+For more information regarding Data Service APIs, please check **Access Data via Browser** documentation in [docs](./docs).
 
 The tags used in this application example were integrated into Data Service application as tags configured within S7 Connector from a PLC data source.
 
-If a PLC data source is not available, the tags can be as well created through the Simulation UI, as explained in paragraph [Create Tag in Simulation UI](#create-tag-in-simulation-ui) for the Sinus example.
+If a PLC data source is not available, the tags can be as well created through the Simulation UI, as explained in paragraph **Create Tag in Simulation UI** for the Sinus example.
 
 ## Usage
 
@@ -139,40 +139,25 @@ Let's now dive into the subflow `DataService Read Variables` node, representing 
 
 ![deploy VFC](../examples/graphics/data-service-read-variables-subflow.PNG)
 
-Below, for each enumerated node of the figure, a brief explanation is given:
+Below a brief explanation is given:
 
-1. **Inject node** to trigger the subsequent operations.
-2. Set the value of the flow variables listed below:
-   - **dataserviceUrl**: "http://edgeappdataservice:4203"
-   - dataserviceUser: "nodeReadUser"
-   - dataservicePass: "nodeReadPass"
-3. Use the flow variables above to **create a user** and define its properties:
-   - userName: "nodeReadUser"
-   - passWord: "nodeReadPass"
-   - familyName: "myFamily nodeReadUser"
-   - givenName: "nodeReadUser"
-   - email: "nodeReadUser@myemail.com"
-   - roles: [{application: "edgeappdataservice", role: "admin"}]}
-4. **HTTP request** node used to **POST data of the created user** to the following URL: `http://edgeappdataservice:4203/TokenManagerService/users`.
-5. Exploit bearer authentication with base64 encoding to **generate a token request for the created user**.
-6. **HTTP request** node used to **POST data of the token** to the following URL: `http://edgeappdataservice:4203/TokenManagerService/oauth/token`.
-   In response to the login and token request of the previous node, the server will generate a bearer token, which is a criptic string used in the subsequent requests in response to the login request. This string will be used in the Authorization header when making requests to protected resources, such as data in Data Service database.
-7. Set the access token as a flow variable (`accessToken`).
-8. Verify if flow variable `accessToken` is null.
-9. Create variables request in order to extract all variables from Data Service database.
-10. **HTTP request** node used to **GET variables data** on the following URL: `http://edgeappdataservice:4203/DataService/Variables` by the mean of the API call shown below.
+1. Creation of SSL certificates for HTTPS request in case of DataService on Remote IED
+2. **Inject node** to trigger the subsequent operations at start
+3. Check remote or local IED for DataService connection and then create login token if remote
+4. Create variables request in order to extract all variables from Data Service database.
+5.  **HTTP request** node used to **GET variables data** on the following URL: `http://edgeappdataservice:4203/DataService/Variables` by the mean of the API call shown below.
     ![deploy VFC](../examples/graphics/get-variables-api.PNG)
-11. Get the names of variables to be extracted from Data Service application, iterate through readed tags and get the ids of the variables of interest. Below an example of data properties and id.
+6. Get the names of variables to be extracted from Data Service application, iterate through readed tags and get the ids of the variables of interest. Below an example of data properties and id.
     ![deploy VFC](../examples/graphics/get-variables-api-example.PNG)
-12. Verify if token, variables ids and datetime ranges data are not null before requesting all the data points associated to the variables of interest.
-13. Format a data request specifying an array with all the variables ids required, the start datetime, the end datetime and the variables sorting in the output data. This information will be used to compose the URL of the HTTP request of the next node. An example is:
+7. Verify if variables ids and datetime ranges data are not null before requesting all the data points associated to the variables of interest.
+8. Format a data request specifying an array with all the variables ids required, the start datetime, the end datetime and the variables sorting in the output data. This information will be used to compose the URL of the HTTP request of the next node. An example is:
     ![deploy VFC](../examples/graphics/get-data-variables-id-api-example.PNG)
-14. **HTTP request** node used to **GET data of a specific variable id** on the following URL `http://edgeappdataservice:4203/DataService/Data/{variableId}` by the mean of the API call shown below.
+9. **HTTP request** node used to **GET data of a specific variable id** on the following URL `http://edgeappdataservice:4203/DataService/Data/{variableId}` by the mean of the API call shown below.
     ![deploy VFC](../examples/graphics/get-data-variable-id-api.PNG)
     This operation will be repeated for all the variables ids explicited. The output of the HTTP request will be the following:
     ![deploy VFC](../examples/graphics/has-more-data-property.PNG)
-15. As marked in the figure above, the API `/DataService/Data/{variableId}` allows data reading with a maximum limit of 2000 points. To extract more datapoints it is possible to exploit the property `hasMoreData`, in which is contained the period of time with datapoints not included in the response. The aim of node (15) is to make recursive calls to the same API until the complete resolution of all the datapoints in the requested time range.
-    When all data points have been retrieved, data will be presented with the format shown below:
-    ![deploy VFC](../examples/graphics/output-data-msg.PNG)
-    Where, for each variable extracted, the datapoints are characterized by the timestamp, value and quality code.
-    ![deploy VFC](../examples/graphics/output-data-msg-details.PNG)
+10. As marked in the figure above, the API `/DataService/Data/{variableId}` allows data reading with a maximum limit of 2000 points. To extract more datapoints it is possible to exploit the property `hasMoreData`, in which is contained the period of time with datapoints not included in the response. The aim of node (15) is to make recursive calls to the same API until the complete resolution of all the datapoints in the requested time range.
+When all data points have been retrieved, data will be presented with the format shown below:
+![deploy VFC](../examples/graphics/output-data-msg.PNG)
+Where, for each variable extracted, the datapoints are characterized by the timestamp, value and quality code.
+![deploy VFC](../examples/graphics/output-data-msg-details.PNG)
